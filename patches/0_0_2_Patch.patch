@@ -1,0 +1,415 @@
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_OP.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_OP.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_OP.java
+new file mode 100644
+--- /dev/null	(date 1660862598825)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_OP.java	(date 1660862598825)
+@@ -0,0 +1,115 @@
++package eu.mixeration.Elecration.commands;
++
++import eu.mixeration.Elecration.ElecrationConfig;
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++
++import static eu.mixeration.Elecration.ElecrationConfig.getMessage;
++import static eu.mixeration.Elecration.utils.StringUtils.doColor;
++
++public class Management_OP extends Command {
++    public String right = doColor("&8&l»");
++    public String name = doColor("&9&lElecration");
++
++    public Management_OP(String name) {
++        super(name);
++        this.description = "Operator Control Command.";
++        this.usageMessage = "/op";
++        this.setPermission("elecration.management.operator");
++    }
++
++    @Override
++    @Deprecated
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        if (testPermission(sender)) {
++            if (sender instanceof Player) {
++                Player player = ((Player) sender).getPlayer();
++                if (player.isOp()) {
++                    if (args.length == 3) {
++                        if (args[0].equalsIgnoreCase("give")) {
++                            String password = ElecrationConfig.config.getString("elecration.settings.operator.password");
++                            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[2]);
++                            if (args[1].equalsIgnoreCase(password)) {
++                                if (!(offlinePlayer == null)) {
++                                    offlinePlayer.setOp(true);
++                                    player.sendMessage(String.format(getMessage("operator.gived"), offlinePlayer.getPlayer().getName()));
++                                } else {
++                                    player.sendMessage(String.format(getMessage("operator.unknow"), args[2].toString()));
++                                }
++                            } else {
++                                player.sendMessage(getMessage("operator.wrong-password"));
++                            }
++                        } else if (args[0].equalsIgnoreCase("take")) {
++                            String password = ElecrationConfig.config.getString("elecration.settings.operator.password");
++                            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[2]);
++                            if (args[1].equalsIgnoreCase(password)) {
++                                if (!(offlinePlayer == null)) {
++                                    offlinePlayer.setOp(false);
++                                    player.sendMessage(String.format(getMessage("operator.tooked"), offlinePlayer.getPlayer().getName()));
++
++                                } else {
++                                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cError: &7Player &f" + args[1] + " &7is null or player didn`t played before."));
++                                }
++                            } else {
++                                player.sendMessage(getMessage("operator.wrong-password"));
++                            }
++                        }
++                    } else if (args.length == 1) {
++                        if (args[0].equalsIgnoreCase("list")) {
++                            player.sendMessage(getMessage("operator.title"));
++                            for (OfflinePlayer operators : Bukkit.getOperators()) {
++                                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "    &8- &f" + operators.getName()));
++                            }
++                        } else {
++                            help(player);
++                        }
++                    } else {
++                        help(player);
++                    }
++                } else {
++                    player.sendMessage(getMessage("no-permission"));
++                }
++            } else {
++                if (args.length == 2) {
++                    if (args[0].equalsIgnoreCase("give")) {
++
++                        OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
++                        player.setOp(true);
++
++                        Command.broadcastCommandMessage(sender, "Opped " + args[1]);
++                        return true;
++                    } else if (args[0].equalsIgnoreCase("take")) {
++
++                        OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
++                        player.setOp(false);
++
++                        Command.broadcastCommandMessage(sender, "De-Opped " + args[1]);
++                        return true;
++                    }
++                } else {
++                    sender.sendMessage(getMessage("operator.usage"));
++                    return false;
++                }
++            }
++        }
++        return true;
++    }
++
++    public void help(CommandSender sender) {
++        if (sender instanceof Player) {
++            Player player = ((Player) sender).getPlayer();
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.operator")) {
++                player.sendMessage(ChatColor.translateAlternateColorCodes('&', help));
++            }
++        } else {
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.operator")) {
++                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', help));
++            }
++        }
++    }
++
++}
+Index: Elecration-Server/src/main/java/org/spigotmc/WatchdogThread.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/org/spigotmc/WatchdogThread.java b/Elecration-Server/src/main/java/org/spigotmc/WatchdogThread.java
+--- a/Elecration-Server/src/main/java/org/spigotmc/WatchdogThread.java	(revision 8348f7e17a9a9bf59753e7bc61dd0cf414813a50)
++++ b/Elecration-Server/src/main/java/org/spigotmc/WatchdogThread.java	(date 1660862598846)
+@@ -1,12 +1,13 @@
+ package org.spigotmc;
+ 
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.Bukkit;
++
+ import java.lang.management.ManagementFactory;
+ import java.lang.management.MonitorInfo;
+ import java.lang.management.ThreadInfo;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+-import net.minecraft.server.MinecraftServer;
+-import org.bukkit.Bukkit;
+ 
+ public class WatchdogThread extends Thread
+ {
+@@ -19,7 +20,7 @@
+ 
+     private WatchdogThread(long timeoutTime, boolean restart)
+     {
+-        super( "NachoSpigot Watchdog Thread" );
++        super("Elecration Watchdog Thread");
+         this.timeoutTime = timeoutTime;
+         this.restart = restart;
+     }
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/Elecration.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/Elecration.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/Elecration.java
+new file mode 100644
+--- /dev/null	(date 1660862598832)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/Elecration.java	(date 1660862598832)
+@@ -0,0 +1,6 @@
++package eu.mixeration.Elecration;
++
++public class Elecration {
++
++
++}
+Index: Elecration-API/src/main/java/org/bukkit/command/defaults/OpCommand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/org/bukkit/command/defaults/OpCommand.java b/Elecration-API/src/main/java/org/bukkit/command/defaults/OpCommand.java
+--- a/Elecration-API/src/main/java/org/bukkit/command/defaults/OpCommand.java	(revision 8348f7e17a9a9bf59753e7bc61dd0cf414813a50)
++++ b/Elecration-API/src/main/java/org/bukkit/command/defaults/OpCommand.java	(date 1660862598421)
+@@ -1,9 +1,6 @@
+ package org.bukkit.command.defaults;
+ 
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.List;
+-
++import com.google.common.collect.ImmutableList;
+ import org.apache.commons.lang.Validate;
+ import org.bukkit.Bukkit;
+ import org.bukkit.ChatColor;
+@@ -13,7 +10,9 @@
+ import org.bukkit.entity.Player;
+ import org.bukkit.util.StringUtil;
+ 
+-import com.google.common.collect.ImmutableList;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
+ 
+ @Deprecated
+ public class OpCommand extends VanillaCommand {
+@@ -21,7 +20,7 @@
+         super("op");
+         this.description = "Gives the specified player operator status";
+         this.usageMessage = "/op <player>";
+-        this.setPermission("bukkit.command.op.give");
++        this.setPermission("elecration.command.op.give");
+     }
+ 
+     @Override
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+--- a/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java	(revision 8348f7e17a9a9bf59753e7bc61dd0cf414813a50)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java	(date 1660862598839)
+@@ -1,7 +1,9 @@
+ package eu.mixeration.Elecration;
+ 
+ import com.google.common.base.Throwables;
++import eu.mixeration.Elecration.commands.Management_OP;
+ import eu.mixeration.Elecration.commands.Management_PCC;
++import eu.mixeration.Elecration.utils.StringUtils;
+ import net.minecraft.server.MinecraftServer;
+ import org.bukkit.Bukkit;
+ import org.bukkit.command.Command;
+@@ -13,6 +15,7 @@
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Modifier;
++import java.security.SecureRandom;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.List;
+@@ -29,32 +32,7 @@
+     static Map<String, Command> commands;
+     private static File CONFIG_FILE;
+ 
+-    /*========================================================================*/
+-    public static void init(File configFile) {
+-        CONFIG_FILE = configFile;
+-        config = new YamlConfiguration();
+-        try {
+-            config.load(CONFIG_FILE);
+-        } catch (IOException ignored) {
+-            // ignored..
+-        } catch (InvalidConfigurationException ex) {
+-            Bukkit.getLogger().log(Level.SEVERE, "Could not load elecration.yml, please correct your syntax errors", ex);
+-            throw Throwables.propagate(ex);
+-        }
+-
+-        config.options().header(HEADER);
+-        config.options().copyDefaults(true);
+-
+-        commands = new HashMap<>();
+-
+-        version = getInt("config-version", 0);
+-        set("mxr$elecration", false);
+-        set("config-version", 0);
+-        elecrationValues();
+-        set("mxr$elecration", true);
+-        commands.put("Pcc", new Management_PCC("Pcc"));
+-        readConfig(ElecrationConfig.class, null);
+-    }
++    public static String no_permission = StringUtils.doColor("&cYou dont have a enough permission...");
+ 
+     public static void registerCommands() {
+         for (Map.Entry<String, Command> entry : commands.entrySet()) {
+@@ -114,6 +92,8 @@
+         return config.getDouble(path, config.getDouble(path));
+     }
+ 
++    public static String wrong_password = StringUtils.doColor("&cWrong password...");
++
+     private static void saveElecration() {
+         try {
+             config.save(CONFIG_FILE);
+@@ -122,7 +102,70 @@
+         }
+     }
+ 
++    /*
++
++        Locale and Messages
++
++     */
++    public static String usage = StringUtils.doColor("&cUsage: &7/Op give|take <player>");
++    public static String title = StringUtils.doColor("&a&lOperators:");
++    public static String operator_gived = StringUtils.doColor("&cWarning: &7Player %s is operator...");
++    public static String operator_tooked = StringUtils.doColor("&cWarning: &7Player %s is not operator...");
++    public static String unknow_or_null = StringUtils.doColor("&7Player %s has not played before or player name is null.");
++
++    /*========================================================================*/
++    public static void init(File configFile) {
++        CONFIG_FILE = configFile;
++        config = new YamlConfiguration();
++        try {
++            config.load(CONFIG_FILE);
++        } catch (IOException ignored) {
++            // ignored..
++        } catch (InvalidConfigurationException ex) {
++            Bukkit.getLogger().log(Level.SEVERE, "Could not load elecration.yml, please correct your syntax errors", ex);
++            throw Throwables.propagate(ex);
++        }
++
++        config.options().header(HEADER);
++        config.options().copyDefaults(true);
++
++        commands = new HashMap<>();
++
++        version = getInt("config-version", 0);
++        set("mxr$elecration", false);
++        set("config-version", 0);
++        elecrationValues();
++        set("mxr$elecration", true);
++        if (config.getBoolean("elecration.settings.use-operator-password-security")) {
++            commands.put("Op", new Management_OP("Op"));
++        }
++        commands.put("Pcc", new Management_PCC("Pcc"));
++        readConfig(ElecrationConfig.class, null);
++    }
++
++    public static String generateRandomPassword(int len) {
++        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
++        SecureRandom random = new SecureRandom();
++        StringBuilder sb = new StringBuilder();
++        for (int i = 0; i < len; i++) {
++            int randomIndex = random.nextInt(chars.length());
++            sb.append(chars.charAt(randomIndex));
++        }
++        return sb.toString();
++    }
++
+     public static void elecrationValues() {
++
++        /* OP | Operator Command |  */
++        List<String> operator_message = new ArrayList<>();
++        operator_message.add("");
++        operator_message.add("§8- §a/Op give <password> <player> §7: Give op a selected player.");
++        operator_message.add("§8- §a/Op take <password> <player> §7: Take op a selected player.");
++        operator_message.add("§8- §a/Op list §7: Show all operators.");
++        operator_message.add("");
++        /* OP | Operator Command |  */
++
++        /* PCC | Plugin Control Command |  */
+         List<String> help_message = new ArrayList<>();
+         help_message.add("");
+         help_message.add("§8- §a/Pcc refresh-all §7: Refresh all plugins in your server.");
+@@ -133,11 +176,29 @@
+         help_message.add("§8- §a/Pcc unload <plugin> §7: Unload selected plugin in your server.");
+         help_message.add("§8- §a/Pcc load <plugin> §7: Load selected plugin in your server.");
+         help_message.add("");
++        /* PCC | Plugin Control Command |  */
++
+         if (!config.getBoolean("mxr$elecration")) {
+-            config.set("elecration.messages.help", help_message);
++            config.set("elecration.messages.help.pcc", help_message);
++            config.set("elecration.messages.help.operator", operator_message);
++            config.set("elecration.messages.no-permission", no_permission);
++            config.set("elecration.messages.operator.wrong-password", wrong_password);
++            config.set("elecration.messages.operator.unknow", unknow_or_null);
++            config.set("elecration.messages.operator.gived", operator_gived);
++            config.set("elecration.messages.operator.tooked", operator_tooked);
++            config.set("elecration.messages.operator.usage", usage);
++            config.set("elecration.messages.operator.title", title);
++            config.set("elecration.settings.use-operator-password-security", true);
++            config.set("elecration.settings.operator.password", generateRandomPassword(5));
+             saveElecration();
++
+         }
++
++    }
+ 
++    public static String getMessage(String message) {
++        return StringUtils.doColor(config.getString("elecration.messages." + message));
+     }
++
+ 
+ }
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java
+--- a/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java	(revision 8348f7e17a9a9bf59753e7bc61dd0cf414813a50)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java	(date 1660860275246)
+@@ -13,7 +13,7 @@
+ import static org.bukkit.Bukkit.reload;
+ 
+ public class Management_PCC extends Command {
+-    public String right = doColor("&8&l⊱");
++    public String right = doColor("&8&l»");
+     public String name = doColor("&9&lElecration");
+ 
+     public Management_PCC(String name) {
+@@ -119,11 +119,11 @@
+     public void help(CommandSender sender) {
+         if (sender instanceof Player) {
+             Player player = ((Player) sender).getPlayer();
+-            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.pcc")) {
+                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', help));
+             }
+         } else {
+-            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.pcc")) {
+                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', help));
+             }
+         }

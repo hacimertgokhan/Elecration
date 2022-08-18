@@ -13,7 +13,7 @@ import static eu.mixeration.Elecration.utils.StringUtils.doColor;
 import static org.bukkit.Bukkit.reload;
 
 public class Management_PCC extends Command {
-    public String right = doColor("&8&l⊱");
+    public String right = doColor("&8&l»");
     public String name = doColor("&9&lElecration");
 
     public Management_PCC(String name) {
@@ -119,11 +119,11 @@ public class Management_PCC extends Command {
     public void help(CommandSender sender) {
         if (sender instanceof Player) {
             Player player = ((Player) sender).getPlayer();
-            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
+            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.pcc")) {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', help));
             }
         } else {
-            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
+            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help.pcc")) {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', help));
             }
         }

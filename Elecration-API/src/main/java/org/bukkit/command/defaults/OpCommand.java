@@ -1,9 +1,6 @@
 package org.bukkit.command.defaults;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -13,7 +10,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Deprecated
 public class OpCommand extends VanillaCommand {
@@ -21,7 +20,7 @@ public class OpCommand extends VanillaCommand {
         super("op");
         this.description = "Gives the specified player operator status";
         this.usageMessage = "/op <player>";
-        this.setPermission("bukkit.command.op.give");
+        this.setPermission("elecration.command.op.give");
     }
 
     @Override

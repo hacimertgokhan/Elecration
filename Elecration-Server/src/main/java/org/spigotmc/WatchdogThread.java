@@ -1,12 +1,13 @@
 package org.spigotmc;
 
+import net.minecraft.server.MinecraftServer;
+import org.bukkit.Bukkit;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.minecraft.server.MinecraftServer;
-import org.bukkit.Bukkit;
 
 public class WatchdogThread extends Thread
 {
@@ -19,7 +20,7 @@ public class WatchdogThread extends Thread
 
     private WatchdogThread(long timeoutTime, boolean restart)
     {
-        super( "NachoSpigot Watchdog Thread" );
+        super("Elecration Watchdog Thread");
         this.timeoutTime = timeoutTime;
         this.restart = restart;
     }

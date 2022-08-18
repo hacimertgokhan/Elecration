@@ -1,7 +1,9 @@
 package eu.mixeration.Elecration;
 
 import com.google.common.base.Throwables;
+import eu.mixeration.Elecration.commands.Management_OP;
 import eu.mixeration.Elecration.commands.Management_PCC;
+import eu.mixeration.Elecration.utils.StringUtils;
 import net.minecraft.server.MinecraftServer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -13,6 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,32 +32,7 @@ public class ElecrationConfig {
     static Map<String, Command> commands;
     private static File CONFIG_FILE;
 
-    /*========================================================================*/
-    public static void init(File configFile) {
-        CONFIG_FILE = configFile;
-        config = new YamlConfiguration();
-        try {
-            config.load(CONFIG_FILE);
-        } catch (IOException ignored) {
-            // ignored..
-        } catch (InvalidConfigurationException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Could not load elecration.yml, please correct your syntax errors", ex);
-            throw Throwables.propagate(ex);
-        }
-
-        config.options().header(HEADER);
-        config.options().copyDefaults(true);
-
-        commands = new HashMap<>();
-
-        version = getInt("config-version", 0);
-        set("mxr$elecration", false);
-        set("config-version", 0);
-        elecrationValues();
-        set("mxr$elecration", true);
-        commands.put("Pcc", new Management_PCC("Pcc"));
-        readConfig(ElecrationConfig.class, null);
-    }
+    public static String no_permission = StringUtils.doColor("&cYou dont have a enough permission...");
 
     public static void registerCommands() {
         for (Map.Entry<String, Command> entry : commands.entrySet()) {
@@ -114,6 +92,8 @@ public class ElecrationConfig {
         return config.getDouble(path, config.getDouble(path));
     }
 
+    public static String wrong_password = StringUtils.doColor("&cWrong password...");
+
     private static void saveElecration() {
         try {
             config.save(CONFIG_FILE);
@@ -122,7 +102,70 @@ public class ElecrationConfig {
         }
     }
 
+    /*
+
+        Locale and Messages
+
+     */
+    public static String usage = StringUtils.doColor("&cUsage: &7/Op give|take <player>");
+    public static String title = StringUtils.doColor("&a&lOperators:");
+    public static String operator_gived = StringUtils.doColor("&cWarning: &7Player %s is operator...");
+    public static String operator_tooked = StringUtils.doColor("&cWarning: &7Player %s is not operator...");
+    public static String unknow_or_null = StringUtils.doColor("&7Player %s has not played before or player name is null.");
+
+    /*========================================================================*/
+    public static void init(File configFile) {
+        CONFIG_FILE = configFile;
+        config = new YamlConfiguration();
+        try {
+            config.load(CONFIG_FILE);
+        } catch (IOException ignored) {
+            // ignored..
+        } catch (InvalidConfigurationException ex) {
+            Bukkit.getLogger().log(Level.SEVERE, "Could not load elecration.yml, please correct your syntax errors", ex);
+            throw Throwables.propagate(ex);
+        }
+
+        config.options().header(HEADER);
+        config.options().copyDefaults(true);
+
+        commands = new HashMap<>();
+
+        version = getInt("config-version", 0);
+        set("mxr$elecration", false);
+        set("config-version", 0);
+        elecrationValues();
+        set("mxr$elecration", true);
+        if (config.getBoolean("elecration.settings.use-operator-password-security")) {
+            commands.put("Op", new Management_OP("Op"));
+        }
+        commands.put("Pcc", new Management_PCC("Pcc"));
+        readConfig(ElecrationConfig.class, null);
+    }
+
+    public static String generateRandomPassword(int len) {
+        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < len; i++) {
+            int randomIndex = random.nextInt(chars.length());
+            sb.append(chars.charAt(randomIndex));
+        }
+        return sb.toString();
+    }
+
     public static void elecrationValues() {
+
+        /* OP | Operator Command |  */
+        List<String> operator_message = new ArrayList<>();
+        operator_message.add("");
+        operator_message.add("§8- §a/Op give <password> <player> §7: Give op a selected player.");
+        operator_message.add("§8- §a/Op take <password> <player> §7: Take op a selected player.");
+        operator_message.add("§8- §a/Op list §7: Show all operators.");
+        operator_message.add("");
+        /* OP | Operator Command |  */
+
+        /* PCC | Plugin Control Command |  */
         List<String> help_message = new ArrayList<>();
         help_message.add("");
         help_message.add("§8- §a/Pcc refresh-all §7: Refresh all plugins in your server.");
@@ -133,11 +176,29 @@ public class ElecrationConfig {
         help_message.add("§8- §a/Pcc unload <plugin> §7: Unload selected plugin in your server.");
         help_message.add("§8- §a/Pcc load <plugin> §7: Load selected plugin in your server.");
         help_message.add("");
+        /* PCC | Plugin Control Command |  */
+
         if (!config.getBoolean("mxr$elecration")) {
-            config.set("elecration.messages.help", help_message);
+            config.set("elecration.messages.help.pcc", help_message);
+            config.set("elecration.messages.help.operator", operator_message);
+            config.set("elecration.messages.no-permission", no_permission);
+            config.set("elecration.messages.operator.wrong-password", wrong_password);
+            config.set("elecration.messages.operator.unknow", unknow_or_null);
+            config.set("elecration.messages.operator.gived", operator_gived);
+            config.set("elecration.messages.operator.tooked", operator_tooked);
+            config.set("elecration.messages.operator.usage", usage);
+            config.set("elecration.messages.operator.title", title);
+            config.set("elecration.settings.use-operator-password-security", true);
+            config.set("elecration.settings.operator.password", generateRandomPassword(5));
             saveElecration();
+
         }
 
     }
+
+    public static String getMessage(String message) {
+        return StringUtils.doColor(config.getString("elecration.messages." + message));
+    }
+
 
 }

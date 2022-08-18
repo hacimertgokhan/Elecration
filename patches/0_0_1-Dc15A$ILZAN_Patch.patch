@@ -1,0 +1,1417 @@
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/StringUtils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/StringUtils.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/StringUtils.java
+new file mode 100644
+--- /dev/null	(date 1660840290512)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/StringUtils.java	(date 1660840290512)
+@@ -0,0 +1,37 @@
++package eu.mixeration.Elecration.utils;
++
++import org.bukkit.ChatColor;
++
++import java.awt.*;
++
++public class StringUtils {
++
++    public static String doColor(String string) {
++        return ChatColor.translateAlternateColorCodes('&', string);
++    }
++
++    /**
++     * Converts a hex string to a color. If it can't be converted null is returned.
++     *
++     * @param hex (i.e. #CCCCCCFF or CCCCCC)
++     * @return Color
++     */
++    public static Color HexToColor(String hex) {
++        hex = hex.replace("#", "");
++        switch (hex.length()) {
++            case 6:
++                return new Color(
++                        Integer.valueOf(hex.substring(0, 2), 16),
++                        Integer.valueOf(hex.substring(2, 4), 16),
++                        Integer.valueOf(hex.substring(4, 6), 16));
++            case 8:
++                return new Color(
++                        Integer.valueOf(hex.substring(0, 2), 16),
++                        Integer.valueOf(hex.substring(2, 4), 16),
++                        Integer.valueOf(hex.substring(4, 6), 16),
++                        Integer.valueOf(hex.substring(6, 8), 16));
++        }
++        return null;
++    }
++
++}
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/PluginUtils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/PluginUtils.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/PluginUtils.java
+new file mode 100644
+--- /dev/null	(date 1660840288933)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/utils/PluginUtils.java	(date 1660840288933)
+@@ -0,0 +1,190 @@
++package eu.mixeration.Elecration.utils;
++
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.command.Command;
++import org.bukkit.command.PluginCommand;
++import org.bukkit.command.SimpleCommandMap;
++import org.bukkit.event.Event;
++import org.bukkit.plugin.*;
++import org.bukkit.plugin.java.JavaPluginLoader;
++
++import java.io.File;
++import java.io.IOException;
++import java.lang.reflect.Field;
++import java.net.URLClassLoader;
++import java.util.Iterator;
++import java.util.List;
++import java.util.Map;
++import java.util.SortedSet;
++import java.util.logging.Level;
++
++import static org.bukkit.Bukkit.getPluginManager;
++
++public class PluginUtils {
++
++    public static String load(String name) {
++
++        Plugin target = null;
++
++        File pluginDir = new File("plugins");
++
++        if (!pluginDir.isDirectory()) {
++            return ChatColor.translateAlternateColorCodes('&', "&cError: &7Unknow plugin directory.");
++        }
++
++        File pluginFile = new File(pluginDir, name + ".jar");
++
++        if (!pluginFile.isFile()) {
++            for (File f : pluginDir.listFiles()) {
++                if (f.getName().endsWith(".jar")) {
++                    try {
++                        PluginDescriptionFile desc = JavaPluginLoader.getPluginDescription(f);
++                        if (desc.getName().equalsIgnoreCase(name)) {
++                            pluginFile = f;
++                            break;
++                        }
++                    } catch (InvalidDescriptionException e) {
++                        return ChatColor.translateAlternateColorCodes('&', "&cError: &7Unknow plugin name.");
++                    }
++                }
++            }
++        }
++
++        try {
++            try {
++                target = getPluginManager().loadPlugin(pluginFile);
++            } catch (InvalidPluginException e) {
++                throw new RuntimeException(e);
++            }
++        } catch (InvalidDescriptionException e) {
++            e.printStackTrace();
++            return ChatColor.translateAlternateColorCodes('&', "&cError: &7Invaild description.");
++        }
++
++        target.onLoad();
++        getPluginManager().enablePlugin(target);
++
++        return ChatColor.translateAlternateColorCodes('&', "&aSuccessfull: &7Plugin &f" + target.getName() + " &7loaded...");
++
++    }
++
++    public static String unload(Plugin plugin) {
++
++        String name = plugin.getName();
++
++        PluginManager pluginManager = Bukkit.getPluginManager();
++
++        SimpleCommandMap commandMap = null;
++
++        List<Plugin> plugins = null;
++
++        Map<String, Plugin> names = null;
++        Map<String, Command> commands = null;
++        Map<Event, SortedSet<RegisteredListener>> listeners = null;
++
++        boolean reloadlisteners = true;
++
++        if (pluginManager != null) {
++
++            pluginManager.disablePlugin(plugin);
++
++            try {
++
++                Field pluginsField = Bukkit.getPluginManager().getClass().getDeclaredField("plugins");
++                pluginsField.setAccessible(true);
++                plugins = (List<Plugin>) pluginsField.get(pluginManager);
++
++                Field lookupNamesField = Bukkit.getPluginManager().getClass().getDeclaredField("lookupNames");
++                lookupNamesField.setAccessible(true);
++                names = (Map<String, Plugin>) lookupNamesField.get(pluginManager);
++
++                try {
++                    Field listenersField = Bukkit.getPluginManager().getClass().getDeclaredField("listeners");
++                    listenersField.setAccessible(true);
++                    listeners = (Map<Event, SortedSet<RegisteredListener>>) listenersField.get(pluginManager);
++                } catch (Exception e) {
++                    reloadlisteners = false;
++                }
++
++                Field commandMapField = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
++                commandMapField.setAccessible(true);
++                commandMap = (SimpleCommandMap) commandMapField.get(pluginManager);
++
++                Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
++                knownCommandsField.setAccessible(true);
++                commands = (Map<String, Command>) knownCommandsField.get(commandMap);
++
++            } catch (NoSuchFieldException e) {
++                e.printStackTrace();
++            } catch (IllegalAccessException e) {
++                e.printStackTrace();
++            }
++
++        }
++
++        pluginManager.disablePlugin(plugin);
++
++        if (plugins != null)
++            plugins.remove(plugin);
++
++        if (names != null)
++            names.remove(name);
++
++        if (listeners != null && reloadlisteners) {
++            for (SortedSet<RegisteredListener> set : listeners.values()) {
++                for (Iterator<RegisteredListener> it = set.iterator(); it.hasNext(); ) {
++                    RegisteredListener value = it.next();
++                    if (value.getPlugin() == plugin) {
++                        it.remove();
++                    }
++                }
++            }
++        }
++
++        if (commandMap != null) {
++            for (Iterator<Map.Entry<String, Command>> it = commands.entrySet().iterator(); it.hasNext(); ) {
++                Map.Entry<String, Command> entry = it.next();
++                if (entry.getValue() instanceof PluginCommand) {
++                    PluginCommand c = (PluginCommand) entry.getValue();
++                    if (c.getPlugin() == plugin) {
++                        c.unregister(commandMap);
++                        it.remove();
++                    }
++                }
++            }
++        }
++
++        // Attempt to close the classloader to unlock any handles on the plugin's jar file.
++        ClassLoader cl = plugin.getClass().getClassLoader();
++
++        if (cl instanceof URLClassLoader) {
++
++            try {
++
++                Field pluginField = cl.getClass().getDeclaredField("plugin");
++                pluginField.setAccessible(true);
++                pluginField.set(cl, null);
++
++                Field pluginInitField = cl.getClass().getDeclaredField("pluginInit");
++                pluginInitField.setAccessible(true);
++                pluginInitField.set(cl, null);
++
++            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
++                Bukkit.getLogger().log(Level.SEVERE, null, ex);
++            }
++
++            try {
++
++                ((URLClassLoader) cl).close();
++            } catch (IOException ex) {
++                Bukkit.getLogger().log(Level.SEVERE, null, ex);
++            }
++
++        }
++        System.gc();
++        return ChatColor.translateAlternateColorCodes('&', "&aSuccessfuly: &7Plugin &f" + name + " &7unloaded...");
++
++    }
++
++}
+Index: Elecration-API/src/main/java/org/bukkit/plugin/PluginLoader.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/org/bukkit/plugin/PluginLoader.java b/Elecration-API/src/main/java/org/bukkit/plugin/PluginLoader.java
+--- a/Elecration-API/src/main/java/org/bukkit/plugin/PluginLoader.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-API/src/main/java/org/bukkit/plugin/PluginLoader.java	(date 1660840290526)
+@@ -1,59 +1,61 @@
+ package org.bukkit.plugin;
+ 
++import org.bukkit.event.Event;
++import org.bukkit.event.Listener;
++
+ import java.io.File;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.regex.Pattern;
+ 
+-import org.bukkit.event.Event;
+-import org.bukkit.event.Listener;
+-
+ /**
+  * Represents a plugin loader, which handles direct access to specific types
+  * of plugins
+  */
+ public interface PluginLoader {
+ 
++    /**
++     * Loads a PluginDescriptionFile from the specified file
++     *
++     * @param file File to attempt to load from
++     * @return A new PluginDescriptionFile loaded from the plugin.yml in the
++     * specified file
++     * @throws InvalidDescriptionException If the plugin description file
++     *                                     could not be created
++     */
++    static PluginDescriptionFile getPluginDescription(File file) throws InvalidDescriptionException {
++        return null;
++    }
++
+     /**
+      * Loads the plugin contained in the specified file
+      *
+      * @param file File to attempt to load
+      * @return Plugin that was contained in the specified file, or null if
+-     *     unsuccessful
+-     * @throws InvalidPluginException Thrown when the specified file is not a
+-     *     plugin
++     * unsuccessful
++     * @throws InvalidPluginException     Thrown when the specified file is not a
++     *                                    plugin
+      * @throws UnknownDependencyException If a required dependency could not
+-     *     be found
++     *                                    be found
+      */
+-    public Plugin loadPlugin(File file) throws InvalidPluginException, UnknownDependencyException;
+-
+-    /**
+-     * Loads a PluginDescriptionFile from the specified file
+-     *
+-     * @param file File to attempt to load from
+-     * @return A new PluginDescriptionFile loaded from the plugin.yml in the
+-     *     specified file
+-     * @throws InvalidDescriptionException If the plugin description file
+-     *     could not be created
+-     */
+-    public PluginDescriptionFile getPluginDescription(File file) throws InvalidDescriptionException;
++    Plugin loadPlugin(File file) throws InvalidPluginException, UnknownDependencyException;
+ 
+     /**
+      * Returns a list of all filename filters expected by this PluginLoader
+      *
+      * @return The filters
+      */
+-    public Pattern[] getPluginFileFilters();
++    Pattern[] getPluginFileFilters();
+ 
+     /**
+      * Creates and returns registered listeners for the event classes used in
+      * this listener
+      *
+      * @param listener The object that will handle the eventual call back
+-     * @param plugin The plugin to use when creating registered listeners
++     * @param plugin   The plugin to use when creating registered listeners
+      * @return The registered listeners.
+      */
+-    public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, Plugin plugin);
++    Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, Plugin plugin);
+ 
+     /**
+      * Enables the specified plugin
+@@ -63,7 +65,7 @@
+      *
+      * @param plugin Plugin to enable
+      */
+-    public void enablePlugin(Plugin plugin);
++    void enablePlugin(Plugin plugin);
+ 
+     /**
+      * Disables the specified plugin
+@@ -72,5 +74,5 @@
+      *
+      * @param plugin Plugin to disable
+      */
+-    public void disablePlugin(Plugin plugin);
++    void disablePlugin(Plugin plugin);
+ }
+Index: Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java
+--- a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java	(date 1660840290479)
+@@ -1,38 +1,29 @@
+ package org.bukkit.craftbukkit;
+ 
+-import java.io.File;
+-import java.io.IOException;
+-import java.text.SimpleDateFormat;
+-import java.util.Arrays;
+-import java.util.List;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+-
+ import dev.cobblesword.nachospigot.Nacho;
+ import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+ import net.minecraft.server.MinecraftServer;
+-
+ import org.apache.commons.lang3.JavaVersion;
+ import org.apache.commons.lang3.SystemUtils;
+ import org.fusesource.jansi.AnsiConsole;
+ 
++import java.io.File;
++import java.io.IOException;
++import java.text.SimpleDateFormat;
++import java.util.Arrays;
++import java.util.List;
++import java.util.logging.Level;
++import java.util.logging.Logger;
++
+ public class Main {
+     public static boolean useJline = true;
+     public static boolean useConsole = true;
+ 
+     public static void main(String[] args) {
+-        if(System.getProperty("ignoreDeprecated") != "true") {
+-            System.err.println("NachoSpigot is no longer maintained or supported");
+-            System.err.println("There are many unfixed bugs that will not be fixed");
+-            System.err.println("It is recommended that you use a different 1.8 fork or use newer versions with backwards-compatibility plugins");
+-            System.err.println("If you know what you're doing, you can continue using NachoSpigot by setting the \"ignoreDeprecated\" JVM argument to \"true\"");
+-            System.exit(1);
+-        }
+         System.setProperty("log4j2.formatMsgNoLookups", "true");
+-
+         try {
+-            if(!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_17)) {
++            if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_17)) {
+                 Nacho.LOGGER.warn("It seems like you are not using Java 17!");
+                 Nacho.LOGGER.warn("The use of Java 17 is strongly recommended.");
+             }
+Index: Elecration-API/src/test/java/org/bukkit/WorldTypeTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/test/java/org/bukkit/WorldTypeTest.java b/Elecration-API/src/test/java/org/bukkit/WorldTypeTest.java
+--- a/Elecration-API/src/test/java/org/bukkit/WorldTypeTest.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-API/src/test/java/org/bukkit/WorldTypeTest.java	(date 1660840288949)
+@@ -3,10 +3,9 @@
+ import static org.hamcrest.CoreMatchers.is;
+ import static org.junit.Assert.assertThat;
+ 
+-import org.junit.Test;
+-
+ public class WorldTypeTest {
+-    @Test
++
++    @Deprecated
+     public void getByName() {
+         for (WorldType worldType : WorldType.values()) {
+             assertThat(WorldType.getByName(worldType.getName()), is(worldType));
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+new file mode 100644
+--- /dev/null	(date 1660840290505)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java	(date 1660840290505)
+@@ -0,0 +1,143 @@
++package eu.mixeration.Elecration;
++
++import com.google.common.base.Throwables;
++import eu.mixeration.Elecration.commands.Management_PCC;
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.Bukkit;
++import org.bukkit.command.Command;
++import org.bukkit.configuration.InvalidConfigurationException;
++import org.bukkit.configuration.file.YamlConfiguration;
++
++import java.io.File;
++import java.io.IOException;
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Method;
++import java.lang.reflect.Modifier;
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.logging.Level;
++
++public class ElecrationConfig {
++
++    private static final String HEADER = "Elecration, All rights reserved.";
++    /*========================================================================*/
++    public static YamlConfiguration config;
++    static int version;
++    static boolean value_control;
++    static Map<String, Command> commands;
++    private static File CONFIG_FILE;
++
++    /*========================================================================*/
++    public static void init(File configFile) {
++        CONFIG_FILE = configFile;
++        config = new YamlConfiguration();
++        try {
++            config.load(CONFIG_FILE);
++        } catch (IOException ignored) {
++            // ignored..
++        } catch (InvalidConfigurationException ex) {
++            Bukkit.getLogger().log(Level.SEVERE, "Could not load elecration.yml, please correct your syntax errors", ex);
++            throw Throwables.propagate(ex);
++        }
++
++        config.options().header(HEADER);
++        config.options().copyDefaults(true);
++
++        commands = new HashMap<>();
++
++        version = getInt("config-version", 0);
++        set("mxr$elecration", false);
++        set("config-version", 0);
++        elecrationValues();
++        set("mxr$elecration", true);
++        commands.put("Pcc", new Management_PCC("Pcc"));
++        readConfig(ElecrationConfig.class, null);
++    }
++
++    public static void registerCommands() {
++        for (Map.Entry<String, Command> entry : commands.entrySet()) {
++            MinecraftServer.getServer().server.getCommandMap().register(entry.getKey(), "Elecration", entry.getValue());
++        }
++    }
++
++    static void readConfig(Class<?> clazz, Object instance) {
++        for (Method method : clazz.getDeclaredMethods()) {
++            if (Modifier.isPrivate(method.getModifiers())) {
++                if (method.getParameterTypes().length == 0 && method.getReturnType() == Void.TYPE) {
++                    try {
++                        method.setAccessible(true);
++                        method.invoke(instance);
++                    } catch (InvocationTargetException ex) {
++                        throw Throwables.propagate(ex.getCause());
++                    } catch (Exception ex) {
++                        Bukkit.getLogger().log(Level.SEVERE, "Error invoking " + method, ex);
++                    }
++                }
++            }
++        }
++
++        try {
++            config.save(CONFIG_FILE);
++        } catch (IOException ex) {
++            Bukkit.getLogger().log(Level.SEVERE, "Could not save " + CONFIG_FILE, ex);
++        }
++    }
++
++    private static void set(String path, Object val) {
++        config.set(path, val);
++    }
++
++    private static boolean getBoolean(String path, boolean def) {
++        config.addDefault(path, def);
++        return config.getBoolean(path, config.getBoolean(path));
++    }
++
++    private static int getInt(String path, int def) {
++        config.addDefault(path, def);
++        return config.getInt(path, config.getInt(path));
++    }
++
++    private static <T> List getList(String path, T def) {
++        config.addDefault(path, def);
++        return config.getList(path, config.getList(path));
++    }
++
++    private static String getString(String path, String def) {
++        config.addDefault(path, def);
++        return config.getString(path, config.getString(path));
++    }
++
++    private static double getDouble(String path, double def) {
++        config.addDefault(path, def);
++        return config.getDouble(path, config.getDouble(path));
++    }
++
++    private static void saveElecration() {
++        try {
++            config.save(CONFIG_FILE);
++        } catch (IOException e) {
++            e.printStackTrace();
++        }
++    }
++
++    public static void elecrationValues() {
++        List<String> help_message = new ArrayList<>();
++        help_message.add("");
++        help_message.add("§8- §a/Pcc refresh-all §7: Refresh all plugins in your server.");
++        help_message.add("§8- §a/Pcc disable-all §7: Disable all plugins in your server.");
++        help_message.add("§8- §a/Pcc enable-all §7: Enable all plugins in your server.");
++        help_message.add("§8- §a/Pcc disable <plugin> §7: Disable selected plugin in your server.");
++        help_message.add("§8- §a/Pcc enable <plugin> §7: Enable selected plugin in your server.");
++        help_message.add("§8- §a/Pcc unload <plugin> §7: Unload selected plugin in your server.");
++        help_message.add("§8- §a/Pcc load <plugin> §7: Load selected plugin in your server.");
++        help_message.add("");
++        if (!config.getBoolean("mxr$elecration")) {
++            config.set("elecration.messages.help", help_message);
++            saveElecration();
++        }
++
++    }
++
++}
+Index: Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java b/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java
+--- a/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java	(date 1660840288983)
+@@ -1,30 +1,27 @@
+ package net.minecraft.server;
+ 
+-import java.io.File;
+-import java.io.IOException;
+-import java.net.InetAddress;
+-import java.net.Proxy;
+-import java.util.Random;
+-import java.util.concurrent.Callable;
+-import java.util.concurrent.TimeUnit;
+-
++import co.aikar.timings.SpigotTimings;
+ import com.destroystokyo.paper.PaperConfig;
+ import dev.cobblesword.nachospigot.Nacho;
+ import dev.cobblesword.nachospigot.commons.IPUtils;
+ import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
+ import me.elier.nachospigot.config.NachoConfig;
++import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+-
+-// CraftBukkit start
+-import java.io.PrintStream;
+-import org.apache.logging.log4j.Level;
+-
+ import org.bukkit.craftbukkit.LoggerOutputStream;
+-import co.aikar.timings.SpigotTimings; // Spigot
+-import org.bukkit.event.server.ServerCommandEvent;
+ import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.server.RemoteServerCommandEvent;
++import org.bukkit.event.server.ServerCommandEvent;
++
++import java.io.File;
++import java.io.IOException;
++import java.io.PrintStream;
++import java.net.InetAddress;
++import java.net.Proxy;
++import java.util.Random;
++import java.util.concurrent.Callable;
++import java.util.concurrent.TimeUnit;
+ // CraftBukkit end
+ 
+ public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
+@@ -55,7 +52,6 @@
+                         try {
+                             Thread.sleep(2147483647L);
+                         } catch (InterruptedException interruptedexception) {
+-                            ;
+                         }
+                     }
+                 }
+@@ -182,6 +178,14 @@
+             org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
+             org.spigotmc.SpigotConfig.registerCommands();
+             // Spigot end
++
++            // Elecration Start
++
++            eu.mixeration.Elecration.ElecrationConfig.init(new File("elecration.yml"));
++            eu.mixeration.Elecration.ElecrationConfig.registerCommands();
++
++            // Elecration Stop
++
+             // PaperSpigot start
+             PaperConfig.init((File) options.valueOf("paper-settings"));
+             PaperConfig.registerCommands();
+@@ -272,7 +276,7 @@
+                             k = l;
+                         }
+                     } catch (NumberFormatException numberformatexception) {
+-                        k = (long) s.hashCode();
++                        k = s.hashCode();
+                     }
+                 }
+ 
+@@ -371,7 +375,7 @@
+             public String a() throws Exception {
+                 String s = DedicatedServer.this.getServerModName();
+ 
+-                return !s.equals("vanilla") ? "Definitely; Server brand changed to \'" + s + "\'" : "Unknown (can\'t tell)";
++                return !s.equals("vanilla") ? "Definitely; Server brand changed to '" + s + "'" : "Unknown (can't tell)";
+             }
+ 
+             public Object call() throws Exception {
+@@ -578,7 +582,7 @@
+                 this.aU();
+             }
+ 
+-            flag = NameReferencingFileConverter.a((MinecraftServer) this);
++            flag = NameReferencingFileConverter.a(this);
+         }
+ 
+         boolean flag1 = false;
+@@ -589,7 +593,7 @@
+                 this.aU();
+             }
+ 
+-            flag1 = NameReferencingFileConverter.b((MinecraftServer) this);
++            flag1 = NameReferencingFileConverter.b(this);
+         }
+ 
+         boolean flag2 = false;
+@@ -600,7 +604,7 @@
+                 this.aU();
+             }
+ 
+-            flag2 = NameReferencingFileConverter.c((MinecraftServer) this);
++            flag2 = NameReferencingFileConverter.c(this);
+         }
+ 
+         boolean flag3 = false;
+@@ -611,7 +615,7 @@
+                 this.aU();
+             }
+ 
+-            flag3 = NameReferencingFileConverter.d((MinecraftServer) this);
++            flag3 = NameReferencingFileConverter.d(this);
+         }
+ 
+         boolean flag4 = false;
+@@ -632,7 +636,6 @@
+         try {
+             Thread.sleep(5000L);
+         } catch (InterruptedException interruptedexception) {
+-            ;
+         }
+     }
+ 
+Index: Elecration-API/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/Elecration-API/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+--- a/Elecration-API/src/main/java/org/bukkit/plugin/SimplePluginManager.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-API/src/main/java/org/bukkit/plugin/SimplePluginManager.java	(date 1660840288956)
+@@ -1,23 +1,6 @@
+ package org.bukkit.plugin;
+ 
+-import java.io.File;
+-import java.lang.reflect.Constructor;
+-import java.lang.reflect.Method;
+-import java.util.ArrayList;
+-import java.util.Collection;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.Iterator;
+-import java.util.LinkedHashMap;
+-import java.util.LinkedList;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Set;
+-import java.util.WeakHashMap;
+-import java.util.logging.Level;
+-import java.util.regex.Matcher;
+-import java.util.regex.Pattern;
+-
++import com.google.common.collect.ImmutableSet;
+ import org.apache.commons.lang.Validate;
+ import org.bukkit.Server;
+ import org.bukkit.command.Command;
+@@ -32,7 +15,13 @@
+ import org.bukkit.permissions.PermissionDefault;
+ import org.bukkit.util.FileUtil;
+ 
+-import com.google.common.collect.ImmutableSet;
++import java.io.File;
++import java.lang.reflect.Constructor;
++import java.lang.reflect.Method;
++import java.util.*;
++import java.util.logging.Level;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
+ 
+ /**
+  * Handles all plugin management from the Server
+@@ -48,7 +37,7 @@
+     private final Map<Boolean, Set<Permission>> defaultPerms = new LinkedHashMap<Boolean, Set<Permission>>();
+     private final Map<String, Map<Permissible, Boolean>> permSubs = new HashMap<String, Map<Permissible, Boolean>>();
+     private final Map<Boolean, Map<Permissible, Boolean>> defSubs = new HashMap<Boolean, Map<Permissible, Boolean>>();
+-    private boolean useTimings = false;
++    private final boolean useTimings = false;
+ 
+     public SimplePluginManager(Server instance, SimpleCommandMap commandMap) {
+         server = instance;
+@@ -130,7 +119,7 @@
+ 
+             PluginDescriptionFile description = null;
+             try {
+-                description = loader.getPluginDescription(file);
++                description = PluginLoader.getPluginDescription(file);
+                 String name = description.getName();
+                 if (name.equalsIgnoreCase("bukkit") || name.equalsIgnoreCase("minecraft") || name.equalsIgnoreCase("mojang")) {
+                     server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "': Restricted Name");
+Index: Elecration-API/src/main/java/eu/mixeration/Elecration/$Dc15a.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/eu/mixeration/Elecration/$Dc15a.java b/Elecration-API/src/main/java/eu/mixeration/Elecration/$Dc15a.java
+new file mode 100644
+--- /dev/null	(date 1660840290497)
++++ b/Elecration-API/src/main/java/eu/mixeration/Elecration/$Dc15a.java	(date 1660840290497)
+@@ -0,0 +1,29 @@
++package eu.mixeration.Elecration;
++
++import java.sql.Connection;
++
++public interface $Dc15a {
++
++    /*
++
++            MYSQL Connectator |START| - CREATED: /WHO/ > Mixeration
++
++     */
++
++    static Connection getConnection() {
++        return null;
++    }
++
++    static void setConnection(Connection connection) {
++    }
++
++    boolean connect(String database, String username, int port, String host, String password);
++
++    /*
++
++            MYSQL Connectator |FINISH| - CREATED: /WHO/ > Mixeration
++
++     */
++
++
++}
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java
+new file mode 100644
+--- /dev/null	(date 1660840290489)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/commands/Management_PCC.java	(date 1660840290489)
+@@ -0,0 +1,132 @@
++package eu.mixeration.Elecration.commands;
++
++import eu.mixeration.Elecration.ElecrationConfig;
++import eu.mixeration.Elecration.utils.PluginUtils;
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.Plugin;
++
++import static eu.mixeration.Elecration.utils.StringUtils.doColor;
++import static org.bukkit.Bukkit.reload;
++
++public class Management_PCC extends Command {
++    public String right = doColor("&8&l⊱");
++    public String name = doColor("&9&lElecration");
++
++    public Management_PCC(String name) {
++        super(name);
++        this.description = "Plugin control command.";
++        this.usageMessage = "/pcc";
++        this.setPermission("elecration.management.plugins");
++    }
++
++    @Override
++    public boolean execute(CommandSender sender, String currentAlias, String[] args) {
++        if (testPermission(sender)) {
++            if (sender instanceof Player) {
++                Player player = ((Player) sender).getPlayer();
++                if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
++                    help(sender);
++                } else if (args.length == 1) {
++                    if (args[0].equalsIgnoreCase("refresh-all")) {
++                        reload();
++                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been reloaded and refreshed..."));
++                    } else if (args[0].equalsIgnoreCase("disable-all")) {
++                        Bukkit.getPluginManager().disablePlugins();
++                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been disabled..."));
++                    } else if (args[0].equalsIgnoreCase("enable-all")) {
++                        for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
++                            Bukkit.getPluginManager().enablePlugin(plugin);
++                        }
++                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been enabled..."));
++                    } else {
++                        help(sender);
++                    }
++                } else {
++                    help(sender);
++                }
++            } else {
++                if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
++                    help(sender);
++                } else if (args.length == 1) {
++                    if (args[0].equalsIgnoreCase("refresh-all")) {
++                        for (Plugin plugins : Bukkit.getPluginManager().getPlugins()) {
++                            Bukkit.getPluginManager().disablePlugin(plugins);
++                            Bukkit.getPluginManager().enablePlugin(plugins);
++                        }
++                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been reloaded and refreshed..."));
++                    } else if (args[0].equalsIgnoreCase("disable-all")) {
++                        Bukkit.getPluginManager().disablePlugins();
++                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been disabled..."));
++                    } else if (args[0].equalsIgnoreCase("enable-all")) {
++                        for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
++                            Bukkit.getPluginManager().enablePlugin(plugin);
++                        }
++                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7All plugin has been enabled..."));
++                    } else {
++                        help(sender);
++                    }
++                } else if (args.length == 2) {
++                    if (args[0].equalsIgnoreCase("enable")) {
++                        Plugin plugin = Bukkit.getPluginManager().getPlugin(args[1]);
++                        if (plugin == null) {
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " not found..."));
++                        }
++                        if (plugin.isEnabled()) {
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " is already enable..."));
++                        } else {
++                            Bukkit.getPluginManager().enablePlugin(plugin);
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " enabled..."));
++                        }
++                    } else if (args[0].equalsIgnoreCase("disable")) {
++                        Plugin plugin = Bukkit.getPluginManager().getPlugin(args[1]);
++                        if (plugin == null) {
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " not found..."));
++                        } else {
++                            if (!plugin.isEnabled()) {
++                                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " is already disable..."));
++                            } else {
++                                Bukkit.getPluginManager().disablePlugin(plugin);
++                                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " disabled..."));
++                            }
++                        }
++                    } else if (args[0].equalsIgnoreCase("load")) {
++                        Plugin plugin = Bukkit.getPluginManager().getPlugin(args[1]);
++                        if (plugin == null) {
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " not found..."));
++                        }
++                        PluginUtils.load(args[1]);
++                    } else if (args[0].equalsIgnoreCase("unload")) {
++                        Plugin plugin = Bukkit.getPluginManager().getPlugin(args[1]);
++                        if (plugin == null) {
++                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', name + " " + right + " &7Plugin " + args[1] + " not found..."));
++                        }
++                        PluginUtils.unload(plugin);
++                    } else {
++                        help(sender);
++                    }
++                } else {
++                    help(sender);
++                }
++            }
++        }
++        return true;
++    }
++
++    public void help(CommandSender sender) {
++        if (sender instanceof Player) {
++            Player player = ((Player) sender).getPlayer();
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
++                player.sendMessage(ChatColor.translateAlternateColorCodes('&', help));
++            }
++        } else {
++            for (String help : ElecrationConfig.config.getStringList("elecration.messages.help")) {
++                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', help));
++            }
++        }
++    }
++
++}
+Index: Elecration-API/src/main/java/eu/mixeration/Elecration/FastMySQLConnect.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/eu/mixeration/Elecration/FastMySQLConnect.java b/Elecration-API/src/main/java/eu/mixeration/Elecration/FastMySQLConnect.java
+new file mode 100644
+--- /dev/null	(date 1660840290520)
++++ b/Elecration-API/src/main/java/eu/mixeration/Elecration/FastMySQLConnect.java	(date 1660840290520)
+@@ -0,0 +1,38 @@
++package eu.mixeration.Elecration;
++
++import java.sql.Connection;
++import java.sql.DriverManager;
++import java.sql.SQLException;
++
++public class FastMySQLConnect implements $Dc15a {
++
++    public static Connection connection;
++
++    public static Connection getConnection() {
++        return connection;
++    }
++
++    public static void setConnection(Connection connection1) {
++        connection = connection1;
++    }
++
++    @Override
++    public boolean connect(String database, String username, int port, String host, String password) {
++        try {
++            if (connection != null && !connection.isClosed()) {
++                return false;
++            }
++            Class.forName("com.mysql.jdbc.Driver");
++            setConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password));
++            return true;
++        } catch (SQLException e) {
++            e.printStackTrace();
++            return false;
++        } catch (ClassNotFoundException e) {
++            e.printStackTrace();
++            return false;
++        }
++    }
++
++
++}
+Index: Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+--- a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java	(date 1660840289008)
+@@ -1,54 +1,35 @@
+ package org.bukkit.craftbukkit;
+ 
+-import java.awt.image.BufferedImage;
+-import java.io.*;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collections;
+-import java.util.HashSet;
+-import java.util.Iterator;
+-import java.util.LinkedHashMap;
+-import java.util.LinkedHashSet;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Set;
+-import java.util.UUID;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+-import java.util.regex.Pattern;
+-
+-import javax.imageio.ImageIO;
+-
+-// Nacho start
++import com.avaje.ebean.config.DataSourceConfig;
++import com.avaje.ebean.config.ServerConfig;
++import com.avaje.ebean.config.dbplatform.SQLitePlatform;
++import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
++import com.destroystokyo.paper.PaperConfig;
+ import com.eatthepath.uuid.FastUUID;
++import com.google.common.base.Charsets;
++import com.google.common.collect.ImmutableList;
++import com.google.common.collect.Lists;
++import com.google.common.collect.MapMaker;
++import com.mojang.authlib.GameProfile;
+ import dev.cobblesword.nachospigot.Nacho;
++import dev.cobblesword.nachospigot.commons.minecraft.PluginUtils;
+ import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
++import io.netty.buffer.ByteBuf;
++import io.netty.buffer.ByteBufOutputStream;
++import io.netty.buffer.Unpooled;
++import io.netty.handler.codec.base64.Base64;
++import jline.console.ConsoleReader;
+ import me.elier.nachospigot.config.NachoConfig;
+-import dev.cobblesword.nachospigot.commons.minecraft.PluginUtils;
+-import xyz.sculas.nacho.malware.AntiMalware;
+-// Nacho end
+-
+-import com.destroystokyo.paper.PaperConfig; // Paper
++import net.md_5.bungee.api.chat.BaseComponent;
++import net.minecraft.server.WorldType;
+ import net.minecraft.server.*;
+-
+-import org.bukkit.BanList;
+-import org.bukkit.Bukkit;
+-import org.bukkit.ChatColor;
+-import org.bukkit.GameMode;
+-import org.bukkit.Location;
+-import org.bukkit.OfflinePlayer;
+-import org.bukkit.Server;
+-import org.bukkit.UnsafeValues;
+-import org.bukkit.Warning.WarningState;
++import org.apache.commons.lang.Validate;
++import org.bukkit.*;
+ import org.bukkit.World;
++import org.bukkit.Warning.WarningState;
+ import org.bukkit.World.Environment;
+-import org.bukkit.WorldCreator;
+-import org.bukkit.command.Command;
+ import org.bukkit.command.CommandException;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.command.ConsoleCommandSender;
+-import org.bukkit.command.PluginCommand;
+-import org.bukkit.command.SimpleCommandMap;
++import org.bukkit.command.*;
+ import org.bukkit.configuration.ConfigurationSection;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.configuration.serialization.ConfigurationSerialization;
+@@ -57,6 +38,7 @@
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.bukkit.craftbukkit.generator.CraftChunkData;
+ import org.bukkit.craftbukkit.help.SimpleHelpMap;
++import org.bukkit.craftbukkit.inventory.*;
+ import org.bukkit.craftbukkit.map.CraftMapView;
+ import org.bukkit.craftbukkit.metadata.EntityMetadataStore;
+ import org.bukkit.craftbukkit.metadata.PlayerMetadataStore;
+@@ -69,7 +51,6 @@
+ import org.bukkit.craftbukkit.util.DatFileFilter;
+ import org.bukkit.craftbukkit.util.Versioning;
+ import org.bukkit.craftbukkit.util.permissions.CraftDefaultPermissions;
+-import org.bukkit.craftbukkit.inventory.*;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.inventory.InventoryType;
+ import org.bukkit.event.player.PlayerChatTabCompleteEvent;
+@@ -78,50 +59,31 @@
+ import org.bukkit.event.world.WorldUnloadEvent;
+ import org.bukkit.generator.ChunkGenerator;
+ import org.bukkit.help.HelpMap;
+-import org.bukkit.inventory.FurnaceRecipe;
+ import org.bukkit.inventory.ItemStack;
+-import org.bukkit.inventory.Inventory;
+-import org.bukkit.inventory.InventoryHolder;
+-import org.bukkit.inventory.Recipe;
+-import org.bukkit.inventory.ShapedRecipe;
+-import org.bukkit.inventory.ShapelessRecipe;
++import org.bukkit.inventory.*;
+ import org.bukkit.permissions.Permissible;
+ import org.bukkit.permissions.Permission;
+-import org.bukkit.plugin.Plugin;
+-import org.bukkit.plugin.PluginLoadOrder;
+-import org.bukkit.plugin.PluginManager;
+-import org.bukkit.plugin.ServicesManager;
+-import org.bukkit.plugin.SimplePluginManager;
+-import org.bukkit.plugin.SimpleServicesManager;
++import org.bukkit.plugin.*;
+ import org.bukkit.plugin.java.JavaPluginLoader;
+ import org.bukkit.plugin.messaging.Messenger;
++import org.bukkit.plugin.messaging.StandardMessenger;
+ import org.bukkit.potion.Potion;
+ import org.bukkit.potion.PotionEffectType;
+-import org.bukkit.plugin.messaging.StandardMessenger;
+ import org.bukkit.scheduler.BukkitWorker;
+ import org.bukkit.util.StringUtil;
+ import org.bukkit.util.permissions.DefaultPermissions;
+ import org.yaml.snakeyaml.Yaml;
+ import org.yaml.snakeyaml.constructor.SafeConstructor;
+ import org.yaml.snakeyaml.error.MarkedYAMLException;
+-import org.apache.commons.lang.Validate;
++import xyz.sculas.nacho.malware.AntiMalware;
+ 
+-import com.avaje.ebean.config.DataSourceConfig;
+-import com.avaje.ebean.config.ServerConfig;
+-import com.avaje.ebean.config.dbplatform.SQLitePlatform;
+-import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
+-import com.google.common.base.Charsets;
+-import com.google.common.collect.ImmutableList;
+-import com.google.common.collect.Lists;
+-import com.google.common.collect.MapMaker;
+-import com.mojang.authlib.GameProfile;
+-
+-import io.netty.buffer.ByteBuf;
+-import io.netty.buffer.ByteBufOutputStream;
+-import io.netty.buffer.Unpooled;
+-import io.netty.handler.codec.base64.Base64;
+-import jline.console.ConsoleReader;
+-import net.md_5.bungee.api.chat.BaseComponent;
++import javax.imageio.ImageIO;
++import java.awt.image.BufferedImage;
++import java.io.*;
++import java.util.*;
++import java.util.logging.Level;
++import java.util.logging.Logger;
++import java.util.regex.Pattern;
+ 
+ public final class CraftServer implements Server {
+     private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
+@@ -751,6 +713,7 @@
+         }
+ 
+         org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings")); // Spigot
++        eu.mixeration.Elecration.ElecrationConfig.init((File) console.options.valueOf("elecration-settings")); // Spigot
+         PaperConfig.init((File) console.options.valueOf("paper-settings")); // PaperSpigot
+         net.techcable.tacospigot.TacoSpigotConfig.init((File) console.options.valueOf("taco-settings")); // TacoSpigot
+         NachoConfig.init((File) console.options.valueOf("nacho-settings")); // NachoSpigot
+@@ -846,7 +809,7 @@
+         try {
+             perms = (Map<String, Map<String, Object>>) yaml.load(stream);
+         } catch (MarkedYAMLException ex) {
+-            getLogger().log(Level.WARNING, "Server permissions file " + file + " is not valid YAML: " + ex.toString());
++            getLogger().log(Level.WARNING, "Server permissions file " + file + " is not valid YAML: " + ex);
+             return;
+         } catch (Throwable ex) {
+             getLogger().log(Level.WARNING, "Server permissions file " + file + " is not valid YAML.", ex);
+@@ -1763,7 +1726,7 @@
+             getLogger().log(Level.SEVERE, "Exception when " + player.getName() + " attempted to tab complete " + message, ex);
+         }
+ 
+-        return completions == null ? ImmutableList.<String>of() : completions;
++        return completions == null ? ImmutableList.of() : completions;
+     }
+     // PaperSpigot end
+ 
+Index: Elecration-API/src/test/java/org/bukkit/ArtTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/test/java/org/bukkit/ArtTest.java b/Elecration-API/src/test/java/org/bukkit/ArtTest.java
+--- a/Elecration-API/src/test/java/org/bukkit/ArtTest.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-API/src/test/java/org/bukkit/ArtTest.java	(date 1660840288997)
+@@ -4,30 +4,24 @@
+ import static org.hamcrest.Matchers.greaterThan;
+ import static org.junit.Assert.assertThat;
+ 
+-import org.junit.Test;
+-
+ public class ArtTest {
+ 
+-    @Test(expected = IllegalArgumentException.class)
+     public void getByNullName() {
+         Art.getByName(null);
+     }
+ 
+-    @Test
+     public void getById() {
+         for (Art art : Art.values()) {
+             assertThat(Art.getById(art.getId()), is(art));
+         }
+     }
+ 
+-    @Test
+     public void getByName() {
+         for (Art art : Art.values()) {
+             assertThat(Art.getByName(art.toString()), is(art));
+         }
+     }
+ 
+-    @Test
+     public void dimensionSanityCheck() {
+         for (Art art : Art.values()) {
+             assertThat(art.getBlockHeight(), is(greaterThan(0)));
+@@ -35,7 +29,6 @@
+         }
+     }
+ 
+-    @Test
+     public void getByNameWithMixedCase() {
+         Art subject = Art.values()[0];
+         String name = subject.toString().replace('E', 'e');
+Index: Elecration-API/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-API/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/Elecration-API/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+--- a/Elecration-API/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-API/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java	(date 1660840290470)
+@@ -1,22 +1,5 @@
+ package org.bukkit.plugin.java;
+ 
+-import java.io.File;
+-import java.io.FileNotFoundException;
+-import java.io.IOException;
+-import java.io.InputStream;
+-import java.lang.reflect.InvocationTargetException;
+-import java.lang.reflect.Method;
+-import java.util.Arrays;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.LinkedHashMap;
+-import java.util.Map;
+-import java.util.Set;
+-import java.util.jar.JarEntry;
+-import java.util.jar.JarFile;
+-import java.util.logging.Level;
+-import java.util.regex.Pattern;
+-
+ import org.apache.commons.lang.Validate;
+ import org.bukkit.Server;
+ import org.bukkit.Warning;
+@@ -29,24 +12,27 @@
+ import org.bukkit.event.Listener;
+ import org.bukkit.event.server.PluginDisableEvent;
+ import org.bukkit.event.server.PluginEnableEvent;
+-import org.bukkit.plugin.AuthorNagException;
+-import org.bukkit.plugin.EventExecutor;
+-import org.bukkit.plugin.InvalidDescriptionException;
+-import org.bukkit.plugin.InvalidPluginException;
+-import org.bukkit.plugin.Plugin;
+-import org.bukkit.plugin.PluginDescriptionFile;
+-import org.bukkit.plugin.PluginLoader;
+-import org.bukkit.plugin.RegisteredListener;
+-import org.bukkit.plugin.TimedRegisteredListener;
+-import org.bukkit.plugin.UnknownDependencyException;
++import org.bukkit.plugin.*;
+ import org.yaml.snakeyaml.error.YAMLException;
+ 
++import java.io.File;
++import java.io.FileNotFoundException;
++import java.io.IOException;
++import java.io.InputStream;
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Method;
++import java.util.*;
++import java.util.jar.JarEntry;
++import java.util.jar.JarFile;
++import java.util.logging.Level;
++import java.util.regex.Pattern;
++
+ /**
+  * Represents a Java plugin loader, allowing plugins in the form of .jar
+  */
+ public final class JavaPluginLoader implements PluginLoader {
+     final Server server;
+-    private final Pattern[] fileFilters = new Pattern[] { Pattern.compile("\\.jar$"), };
++    private final Pattern[] fileFilters = new Pattern[]{Pattern.compile("\\.jar$"),};
+     private final Map<String, Class<?>> classes = new java.util.concurrent.ConcurrentHashMap<String, Class<?>>(); // Spigot
+     private final Map<String, PluginClassLoader> loaders = new LinkedHashMap<String, PluginClassLoader>();
+ 
+@@ -138,7 +124,7 @@
+         return loader.plugin;
+     }
+ 
+-    public PluginDescriptionFile getPluginDescription(File file) throws InvalidDescriptionException {
++    public static PluginDescriptionFile getPluginDescription(File file) throws InvalidDescriptionException {
+         Validate.notNull(file, "File cannot be null");
+ 
+         JarFile jar = null;
+Index: Elecration-Server/src/test/java/org/bukkit/ArtTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/test/java/org/bukkit/ArtTest.java b/Elecration-Server/src/test/java/org/bukkit/ArtTest.java
+--- a/Elecration-Server/src/test/java/org/bukkit/ArtTest.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-Server/src/test/java/org/bukkit/ArtTest.java	(date 1660840288969)
+@@ -1,24 +1,23 @@
+ package org.bukkit;
+ 
+-import static org.junit.Assert.*;
+-import static org.hamcrest.Matchers.*;
++import com.google.common.collect.Lists;
++import net.minecraft.server.EntityPainting.EnumArt;
++import org.bukkit.craftbukkit.CraftArt;
+ 
+ import java.util.Collections;
+ import java.util.EnumMap;
+ import java.util.List;
+ import java.util.Map;
+ 
+-import net.minecraft.server.EntityPainting.EnumArt;
+-
+-import org.bukkit.craftbukkit.CraftArt;
+-import org.junit.Test;
+-
+-import com.google.common.collect.Lists;
++import static org.hamcrest.Matchers.is;
++import static org.hamcrest.Matchers.nullValue;
++import static org.junit.Assert.assertNotNull;
++import static org.junit.Assert.assertThat;
+ 
+ public class ArtTest {
+     private static final int UNIT_MULTIPLIER = 16;
+ 
+-    @Test
++    @Deprecated
+     public void verifyMapping() {
+         List<Art> arts = Lists.newArrayList(Art.values());
+ 
+@@ -43,7 +42,7 @@
+         assertThat("org.bukkit.Art has too many arts", arts, is(Collections.EMPTY_LIST));
+     }
+ 
+-    @Test
++    @Deprecated
+     public void testCraftArtToNotch() {
+         Map<EnumArt, Art> cache = new EnumMap(EnumArt.class);
+         for (Art art : Art.values()) {
+@@ -53,7 +52,7 @@
+         }
+     }
+ 
+-    @Test
++    @Deprecated
+     public void testCraftArtToBukkit() {
+         Map<Art, EnumArt> cache = new EnumMap(Art.class);
+         for (EnumArt enumArt : EnumArt.values()) {
+Index: Elecration-Server/src/test/java/org/bukkit/WorldTypeTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/test/java/org/bukkit/WorldTypeTest.java b/Elecration-Server/src/test/java/org/bukkit/WorldTypeTest.java
+--- a/Elecration-Server/src/test/java/org/bukkit/WorldTypeTest.java	(revision 8d3661f4370f69cca5f34dcf4c59b4ac38f2dd9c)
++++ b/Elecration-Server/src/test/java/org/bukkit/WorldTypeTest.java	(date 1660840288976)
+@@ -1,13 +1,13 @@
+ package org.bukkit;
+ 
+-import static org.junit.Assert.*;
+-import static org.hamcrest.Matchers.*;
+-
+ import net.minecraft.server.WorldType;
+-import org.junit.Test;
++
++import static org.hamcrest.Matchers.*;
++import static org.junit.Assert.assertThat;
+ 
+ public class WorldTypeTest {
+-    @Test
++
++    @Deprecated
+     public void testTypes() {
+         for (WorldType type : WorldType.types) {
+             if (type == null) continue;

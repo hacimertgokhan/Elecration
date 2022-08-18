@@ -1,24 +1,23 @@
 package org.bukkit;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import com.google.common.collect.Lists;
+import net.minecraft.server.EntityPainting.EnumArt;
+import org.bukkit.craftbukkit.CraftArt;
 
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.server.EntityPainting.EnumArt;
-
-import org.bukkit.craftbukkit.CraftArt;
-import org.junit.Test;
-
-import com.google.common.collect.Lists;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 public class ArtTest {
     private static final int UNIT_MULTIPLIER = 16;
 
-    @Test
+    @Deprecated
     public void verifyMapping() {
         List<Art> arts = Lists.newArrayList(Art.values());
 
@@ -43,7 +42,7 @@ public class ArtTest {
         assertThat("org.bukkit.Art has too many arts", arts, is(Collections.EMPTY_LIST));
     }
 
-    @Test
+    @Deprecated
     public void testCraftArtToNotch() {
         Map<EnumArt, Art> cache = new EnumMap(EnumArt.class);
         for (Art art : Art.values()) {
@@ -53,7 +52,7 @@ public class ArtTest {
         }
     }
 
-    @Test
+    @Deprecated
     public void testCraftArtToBukkit() {
         Map<Art, EnumArt> cache = new EnumMap(Art.class);
         for (EnumArt enumArt : EnumArt.values()) {

@@ -1,30 +1,27 @@
 package net.minecraft.server;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Proxy;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
+import co.aikar.timings.SpigotTimings;
 import com.destroystokyo.paper.PaperConfig;
 import dev.cobblesword.nachospigot.Nacho;
 import dev.cobblesword.nachospigot.commons.IPUtils;
 import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
 import me.elier.nachospigot.config.NachoConfig;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-// CraftBukkit start
-import java.io.PrintStream;
-import org.apache.logging.log4j.Level;
-
 import org.bukkit.craftbukkit.LoggerOutputStream;
-import co.aikar.timings.SpigotTimings; // Spigot
-import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
+import org.bukkit.event.server.ServerCommandEvent;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.Proxy;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 // CraftBukkit end
 
 public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
@@ -55,7 +52,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                         try {
                             Thread.sleep(2147483647L);
                         } catch (InterruptedException interruptedexception) {
-                            ;
                         }
                     }
                 }
@@ -182,6 +178,14 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
             org.spigotmc.SpigotConfig.init((File) options.valueOf("spigot-settings"));
             org.spigotmc.SpigotConfig.registerCommands();
             // Spigot end
+
+            // Elecration Start
+
+            eu.mixeration.Elecration.ElecrationConfig.init(new File("elecration.yml"));
+            eu.mixeration.Elecration.ElecrationConfig.registerCommands();
+
+            // Elecration Stop
+
             // PaperSpigot start
             PaperConfig.init((File) options.valueOf("paper-settings"));
             PaperConfig.registerCommands();
@@ -272,7 +276,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                             k = l;
                         }
                     } catch (NumberFormatException numberformatexception) {
-                        k = (long) s.hashCode();
+                        k = s.hashCode();
                     }
                 }
 
@@ -371,7 +375,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
             public String a() throws Exception {
                 String s = DedicatedServer.this.getServerModName();
 
-                return !s.equals("vanilla") ? "Definitely; Server brand changed to \'" + s + "\'" : "Unknown (can\'t tell)";
+                return !s.equals("vanilla") ? "Definitely; Server brand changed to '" + s + "'" : "Unknown (can't tell)";
             }
 
             public Object call() throws Exception {
@@ -578,7 +582,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                 this.aU();
             }
 
-            flag = NameReferencingFileConverter.a((MinecraftServer) this);
+            flag = NameReferencingFileConverter.a(this);
         }
 
         boolean flag1 = false;
@@ -589,7 +593,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                 this.aU();
             }
 
-            flag1 = NameReferencingFileConverter.b((MinecraftServer) this);
+            flag1 = NameReferencingFileConverter.b(this);
         }
 
         boolean flag2 = false;
@@ -600,7 +604,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                 this.aU();
             }
 
-            flag2 = NameReferencingFileConverter.c((MinecraftServer) this);
+            flag2 = NameReferencingFileConverter.c(this);
         }
 
         boolean flag3 = false;
@@ -611,7 +615,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                 this.aU();
             }
 
-            flag3 = NameReferencingFileConverter.d((MinecraftServer) this);
+            flag3 = NameReferencingFileConverter.d(this);
         }
 
         boolean flag4 = false;
@@ -632,7 +636,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
         try {
             Thread.sleep(5000L);
         } catch (InterruptedException interruptedexception) {
-            ;
         }
     }
 

@@ -1,5 +1,13 @@
 package org.bukkit.craftbukkit;
 
+import dev.cobblesword.nachospigot.Nacho;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import net.minecraft.server.MinecraftServer;
+import org.apache.commons.lang3.JavaVersion;
+import org.apache.commons.lang3.SystemUtils;
+import org.fusesource.jansi.AnsiConsole;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -8,31 +16,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import dev.cobblesword.nachospigot.Nacho;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import net.minecraft.server.MinecraftServer;
-
-import org.apache.commons.lang3.JavaVersion;
-import org.apache.commons.lang3.SystemUtils;
-import org.fusesource.jansi.AnsiConsole;
-
 public class Main {
     public static boolean useJline = true;
     public static boolean useConsole = true;
 
     public static void main(String[] args) {
-        if(System.getProperty("ignoreDeprecated") != "true") {
-            System.err.println("NachoSpigot is no longer maintained or supported");
-            System.err.println("There are many unfixed bugs that will not be fixed");
-            System.err.println("It is recommended that you use a different 1.8 fork or use newer versions with backwards-compatibility plugins");
-            System.err.println("If you know what you're doing, you can continue using NachoSpigot by setting the \"ignoreDeprecated\" JVM argument to \"true\"");
-            System.exit(1);
-        }
         System.setProperty("log4j2.formatMsgNoLookups", "true");
-
         try {
-            if(!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_17)) {
+            if (!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_17)) {
                 Nacho.LOGGER.warn("It seems like you are not using Java 17!");
                 Nacho.LOGGER.warn("The use of Java 17 is strongly recommended.");
             }

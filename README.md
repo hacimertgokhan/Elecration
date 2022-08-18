@@ -4,7 +4,8 @@
 ```
 
 <--> by Mixeration
-[Elecration-0001] Added plugin management system;
+[Elecration-0002] Added operator password system
+[Elecration-0001] Added plugin management system
 
 [Spigot-0097] Remove DataWatcher Locking by spottedleaf
 [Spigot-0138] Branchless NibbleArray by md5

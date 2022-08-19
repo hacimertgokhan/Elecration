@@ -4,6 +4,8 @@
 ```
 
 <--> by Mixeration
+[Elecration-0003] Added server control system
+[Elecration-0003] Hooked with discord messenger
 [Elecration-0002] Added operator password system
 [Elecration-0001] Added plugin management system
 

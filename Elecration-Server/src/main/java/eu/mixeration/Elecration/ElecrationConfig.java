@@ -3,8 +3,9 @@ package eu.mixeration.Elecration;
 import com.google.common.base.Throwables;
 import eu.mixeration.Elecration.commands.Management_OP;
 import eu.mixeration.Elecration.commands.Management_PCC;
+import eu.mixeration.Elecration.commands.Management_SVC;
 import eu.mixeration.Elecration.utils.StringUtils;
-import net.minecraft.server.MinecraftServer;
+import eu.mixeration.Elecration.utils.WebhookUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import static net.minecraft.server.MinecraftServer.getServer;
+
 public class ElecrationConfig {
 
     private static final String HEADER = "Elecration, All rights reserved.";
@@ -36,7 +39,7 @@ public class ElecrationConfig {
 
     public static void registerCommands() {
         for (Map.Entry<String, Command> entry : commands.entrySet()) {
-            MinecraftServer.getServer().server.getCommandMap().register(entry.getKey(), "Elecration", entry.getValue());
+            getServer().server.getCommandMap().register(entry.getKey(), "Elecration", entry.getValue());
         }
     }
 
@@ -134,13 +137,24 @@ public class ElecrationConfig {
         version = getInt("config-version", 0);
         set("mxr$elecration", false);
         set("config-version", 0);
-        elecrationValues();
-        set("mxr$elecration", true);
+        if(config.getBoolean("mxr$elecration")) {
+            Elecration.LOGGER.info("elecration.yml loaded...");
+        } else {
+            elecrationValues();
+        }
         if (config.getBoolean("elecration.settings.use-operator-password-security")) {
             commands.put("Op", new Management_OP("Op"));
+            commands.put("DeOp", new Management_OP("DeOp"));
         }
         commands.put("Pcc", new Management_PCC("Pcc"));
+        commands.put("Svc", new Management_SVC("Svc"));
         readConfig(ElecrationConfig.class, null);
+        if(ElecrationConfig.config.getBoolean("elecration.settings.use-discord")) {
+            Elecration.LOGGER.info( "Sending test message for discord..." );
+            WebhookUtils.sendMessageToDiscord(ElecrationConfig.config.getString("elecration.settings.discord.token"), "Elecration", "Your server has just started...");
+        } else {
+            Elecration.LOGGER.info( "Elecration Discord Module is not enable, Skipping..." );
+        }
     }
 
     public static String generateRandomPassword(int len) {
@@ -178,9 +192,24 @@ public class ElecrationConfig {
         help_message.add("");
         /* PCC | Plugin Control Command |  */
 
+        /* PCC | Plugin Control Command |  */
+        List<String> server_message = new ArrayList<>();
+        server_message.add("");
+        server_message.add("§8- §a/Svc reload motd §7: Refresh server motd.");
+        server_message.add("§8- §a/Svc pvp deny/allow §7: Enable or disable pvp.");
+        server_message.add("§8- §a/Svc flight deny/allow §7: Enable or disable pvp.");
+        server_message.add("§8- §a/Svc lmt-ambient §7: Change ambient entity limits.");
+        server_message.add("§8- §a/Svc lmt-monster §7: Change ambient entity limits.");
+        server_message.add("§8- §a/Svc lmt-animal §7: Change ambient entity limits.");
+        server_message.add("§8- §a/Svc lmt-wateranimal §7: Change ambient entity limits.");
+        server_message.add("§8- §a/Svc create-world-backup <world-name> §7: Create world backup (Copy)");
+        server_message.add("");
+        /* PCC | Plugin Control Command |  */
+
         if (!config.getBoolean("mxr$elecration")) {
             config.set("elecration.messages.help.pcc", help_message);
             config.set("elecration.messages.help.operator", operator_message);
+            config.set("elecration.messages.help.server", server_message);
             config.set("elecration.messages.no-permission", no_permission);
             config.set("elecration.messages.operator.wrong-password", wrong_password);
             config.set("elecration.messages.operator.unknow", unknow_or_null);
@@ -188,12 +217,41 @@ public class ElecrationConfig {
             config.set("elecration.messages.operator.tooked", operator_tooked);
             config.set("elecration.messages.operator.usage", usage);
             config.set("elecration.messages.operator.title", title);
+            config.set("elecration.messages.server.must-be-int", "§7Cant understand, must be §c(0-9/INTEGER)");
+            config.set("elecration.messages.server.unknow-value", "§7Cant understand, must be §c(%s)");
+            config.set("elecration.messages.server.motd-changed", "§7Server motd just changed");
+            config.set("elecration.messages.server.pvp.allow", "§7Players can fight (PCF): Allow");
+            config.set("elecration.messages.server.pvp.deny", "§7Players can fight (PCF): Deny");
+            config.set("elecration.messages.server.flight.allow", "§7Players can flight (PCFLY): Allow");
+            config.set("elecration.messages.server.world-not-found", "§7Cant found world with selected name.");
+            config.set("elecration.messages.server.backup-done", "§2§lBACKUP DONE ! (COPIED) §a(World: %s)");
+            config.set("elecration.messages.server.backup-name", "§7Backup folder name is: §a(%s)");
+            config.set("elecration.messages.server.flight.deny", "§7Players can flight (PCFLY): Deny");
+            config.set("elecration.messages.server.spawn-limit-changed", "§7Limit: §e(%s) §f- §bType: (%s) §f- §cWorld: (%s)");
             config.set("elecration.settings.use-operator-password-security", true);
-            config.set("elecration.settings.operator.password", generateRandomPassword(5));
+            config.set("elecration.settings.use-motd", true);
+            config.set("elecration.settings.use-discord", true);
+            config.set("elecration.settings.discord.token", "https://discord.com/api/webhooks/1010134066357600316/Tsn48ucRV46FPzjA4TKVzLy3LkbI-Oo4him2sCoZlS5lADUkwwjJ54ubC1qk7vva5w_4");
+            config.set("elecration.settings.operator.password", generateRandomPassword(7));
+            set("mxr$elecration", true);
+            changeMotd();
             saveElecration();
 
         }
 
+    }
+
+    public static void changeMotd(){
+        if(config.getBoolean("elecration.settings.use-motd")) {
+
+            /* MOTD |  */
+            List<String> motd_texts = new ArrayList<>();
+            motd_texts.add("§9§lELECRATION §8- §7Like electron §8- §fMixeration<line>§fElecration Spigot 1.8.8 Modernized Fork");
+            /* MOTD |  */
+
+            config.set("elecration.settings.motd", motd_texts);
+
+        }
     }
 
     public static String getMessage(String message) {

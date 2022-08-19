@@ -3,6 +3,7 @@ package eu.mixeration.Elecration.utils;
 import org.bukkit.ChatColor;
 
 import java.awt.*;
+import java.security.SecureRandom;
 
 public class StringUtils {
 
@@ -32,6 +33,17 @@ public class StringUtils {
                         Integer.valueOf(hex.substring(6, 8), 16));
         }
         return null;
+    }
+
+    public static String random(int len) {
+        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < len; i++) {
+            int randomIndex = random.nextInt(chars.length());
+            sb.append(chars.charAt(randomIndex));
+        }
+        return sb.toString();
     }
 
 }

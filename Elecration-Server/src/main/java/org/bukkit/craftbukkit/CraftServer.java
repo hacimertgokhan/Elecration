@@ -14,6 +14,7 @@ import com.mojang.authlib.GameProfile;
 import dev.cobblesword.nachospigot.Nacho;
 import dev.cobblesword.nachospigot.commons.minecraft.PluginUtils;
 import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
+import eu.mixeration.Elecration.ElecrationConfig;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
@@ -85,6 +86,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import static eu.mixeration.Elecration.utils.StringUtils.doColor;
+
 public final class CraftServer implements Server {
     private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
     private String serverName = "NachoSpigot";
@@ -97,7 +100,7 @@ public final class CraftServer implements Server {
     private final SimpleHelpMap helpMap = new SimpleHelpMap(this);
     private final StandardMessenger messenger = new StandardMessenger();
     private final PluginManager pluginManager = new SimplePluginManager(this, commandMap);
-    protected final MinecraftServer console;
+    public static MinecraftServer console;
     protected final DedicatedPlayerList playerList;
     private final Map<String, World> worlds = new LinkedHashMap<>();
     private YamlConfiguration configuration;
@@ -689,7 +692,9 @@ public final class CraftServer implements Server {
         console.setSpawnAnimals(config.getBoolean("spawn-animals", console.getSpawnAnimals()));
         console.setPVP(config.getBoolean("pvp", console.getPVP()));
         console.setAllowFlight(config.getBoolean("allow-flight", console.getAllowFlight()));
-        console.setMotd(config.getString("motd", console.getMotd()));
+        for(String motd : ElecrationConfig.config.getStringList("elecration.settings.motd")) {
+            console.setMotd(doColor(motd.replace("<line>", "\n").replace("<online>", String.valueOf(Bukkit.getServer().getOnlinePlayers()))));
+        }
         monsterSpawn = configuration.getInt("spawn-limits.monsters");
         animalSpawn = configuration.getInt("spawn-limits.animals");
         waterAnimalSpawn = configuration.getInt("spawn-limits.water-animals");
@@ -713,7 +718,7 @@ public final class CraftServer implements Server {
         }
 
         org.spigotmc.SpigotConfig.init((File) console.options.valueOf("spigot-settings")); // Spigot
-        eu.mixeration.Elecration.ElecrationConfig.init((File) console.options.valueOf("elecration-settings")); // Spigot
+        eu.mixeration.Elecration.ElecrationConfig.init(new File("elecration.yml")); // Elecration
         PaperConfig.init((File) console.options.valueOf("paper-settings")); // PaperSpigot
         net.techcable.tacospigot.TacoSpigotConfig.init((File) console.options.valueOf("taco-settings")); // TacoSpigot
         NachoConfig.init((File) console.options.valueOf("nacho-settings")); // NachoSpigot
@@ -743,6 +748,7 @@ public final class CraftServer implements Server {
         resetRecipes();
         org.spigotmc.SpigotConfig.registerCommands(); // Spigot
         PaperConfig.registerCommands(); // PaperSpigot
+        ElecrationConfig.registerCommands(); // Elecration :: Commands
         Nacho.get().registerCommands(); // NachoSpigot :: Commands
 
         overrideAllCommandBlockCommands = commandsConfiguration.getStringList("command-block-overrides").contains("*");

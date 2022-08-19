@@ -4,6 +4,8 @@
 ```
 
 <--> by Mixeration
+[Elecration-0004] Fixed unloaded motd 
+[Elecration-0004] Changed brand channel name and version string name
 [Elecration-0003] Added server control system
 [Elecration-0003] Hooked with discord messenger
 [Elecration-0002] Added operator password system

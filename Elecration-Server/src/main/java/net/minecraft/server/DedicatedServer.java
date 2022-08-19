@@ -5,6 +5,7 @@ import com.destroystokyo.paper.PaperConfig;
 import dev.cobblesword.nachospigot.Nacho;
 import dev.cobblesword.nachospigot.commons.IPUtils;
 import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
+import eu.mixeration.Elecration.ElecrationConfig;
 import me.elier.nachospigot.config.NachoConfig;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,8 @@ import java.net.Proxy;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
+import static eu.mixeration.Elecration.utils.StringUtils.doColor;
 // CraftBukkit end
 
 public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
@@ -148,7 +151,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
             this.setPVP(this.propertyManager.getBoolean("pvp", true));
             this.setAllowFlight(this.propertyManager.getBoolean("allow-flight", false));
             this.setResourcePack(this.propertyManager.getString("resource-pack", ""), this.propertyManager.getString("resource-pack-hash", ""));
-            this.setMotd(this.propertyManager.getString("motd", "A Minecraft Server"));
             this.setForceGamemode(this.propertyManager.getBoolean("force-gamemode", false));
             this.setIdleTimeout(this.propertyManager.getInt("player-idle-timeout", 0));
             if (this.propertyManager.getInt("difficulty", 1) < 0) {
@@ -195,17 +197,19 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
             DedicatedServer.LOGGER.info("Generating keypair");
             this.a(MinecraftEncryption.b());
             DedicatedServer.LOGGER.info("Starting Minecraft server on " + (this.getServerIp().length() == 0 ? "*" : this.getServerIp()) + ":" + this.getPort()); // Nacho - deobfuscate getPort
-
-        if (!org.spigotmc.SpigotConfig.lateBind) {
-            try {
-                this.aq().a(inetaddress, this.getPort()); // Nacho - deobfuscate getPort
-            } catch (IOException ioexception) {
-                DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
-                DedicatedServer.LOGGER.warn("The exception was: {}", ioexception.toString());
-                DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
-                return false;
+            for (String motd : ElecrationConfig.config.getStringList("elecration.settings.motd")) {
+                this.setMotd(doColor(motd.replace("<line>", "\n").replace("<online>", String.valueOf(getServer().getPlayers().length))));
             }
-        }
+            if (!org.spigotmc.SpigotConfig.lateBind) {
+                try {
+                    this.aq().a(inetaddress, this.getPort()); // Nacho - deobfuscate getPort
+                } catch (IOException ioexception) {
+                    DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+                    DedicatedServer.LOGGER.warn("The exception was: {}", ioexception.toString());
+                    DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
+                    return false;
+                }
+            }
 
             // Spigot Start - Move DedicatedPlayerList up and bring plugin loading from CraftServer to here
             // this.a((PlayerList) (new DedicatedPlayerList(this))); // CraftBukkit

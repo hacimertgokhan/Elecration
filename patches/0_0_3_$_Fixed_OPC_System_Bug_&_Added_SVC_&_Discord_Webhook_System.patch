@@ -1,0 +1,13 @@
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision df05313099bd835399327952287538079bc2333e)
++++ b/.gitignore	(date 1660911613470)
+@@ -40,3 +40,4 @@
+ Paperclip
+ work
+ build
++!/Elecration-Server/

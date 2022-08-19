@@ -95,7 +95,6 @@ public class ElecrationConfig {
         return config.getDouble(path, config.getDouble(path));
     }
 
-    public static String wrong_password = StringUtils.doColor("&cWrong password...");
 
     private static void saveElecration() {
         try {
@@ -112,6 +111,7 @@ public class ElecrationConfig {
      */
     public static String usage = StringUtils.doColor("&cUsage: &7/Op give|take <player>");
     public static String title = StringUtils.doColor("&a&lOperators:");
+    public static String wrong_password = StringUtils.doColor("&cWrong password...");
     public static String operator_gived = StringUtils.doColor("&cWarning: &7Player %s is operator...");
     public static String operator_tooked = StringUtils.doColor("&cWarning: &7Player %s is not operator...");
     public static String unknow_or_null = StringUtils.doColor("&7Player %s has not played before or player name is null.");
@@ -246,7 +246,7 @@ public class ElecrationConfig {
 
             /* MOTD |  */
             List<String> motd_texts = new ArrayList<>();
-            motd_texts.add("§9§lELECRATION §8- §7Like electron §8- §fMixeration<line>§fElecration Spigot 1.8.8 Modernized Fork");
+            motd_texts.add("§b§lElecration §8- §fLike electron §8- §bOnline: &9<online><line>       §fElecration Spigot 1.8.8 Modernized Fork");
             /* MOTD |  */
 
             config.set("elecration.settings.motd", motd_texts);

@@ -90,7 +90,7 @@ import static eu.mixeration.Elecration.utils.StringUtils.doColor;
 
 public final class CraftServer implements Server {
     private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
-    private String serverName = "NachoSpigot";
+    private String serverName = "Elecration";
     private final String serverVersion;
     private final String bukkitVersion = Versioning.getBukkitVersion();
     private final Logger logger = Logger.getLogger("Minecraft");
@@ -139,7 +139,7 @@ public final class CraftServer implements Server {
     }
 
     public CraftServer(MinecraftServer console, PlayerList playerList) {
-        this.console = console;
+        CraftServer.console = console;
         this.playerList = (DedicatedPlayerList) playerList;
         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, net.minecraft.server.EntityPlayer::getBukkitEntity));
         this.serverVersion = CraftServer.class.getPackage().getImplementationVersion();
@@ -549,15 +549,15 @@ public final class CraftServer implements Server {
 
     // NOTE: Temporary calls through to server.properies until its replaced
     private String getConfigString(String variable, String defaultValue) {
-        return this.console.getPropertyManager().getString(variable, defaultValue);
+        return console.getPropertyManager().getString(variable, defaultValue);
     }
 
     private int getConfigInt(String variable, int defaultValue) {
-        return this.console.getPropertyManager().getInt(variable, defaultValue);
+        return console.getPropertyManager().getInt(variable, defaultValue);
     }
 
     private boolean getConfigBoolean(String variable, boolean defaultValue) {
-        return this.console.getPropertyManager().getBoolean(variable, defaultValue);
+        return console.getPropertyManager().getBoolean(variable, defaultValue);
     }
 
     // End Temporary calls
@@ -1770,7 +1770,7 @@ public final class CraftServer implements Server {
     }
 
     public void checkSaveState() {
-        if (this.playerCommandState || this.printSaveWarning || this.console.autosavePeriod <= 0) {
+        if (this.playerCommandState || this.printSaveWarning || console.autosavePeriod <= 0) {
             return;
         }
         this.printSaveWarning = true;

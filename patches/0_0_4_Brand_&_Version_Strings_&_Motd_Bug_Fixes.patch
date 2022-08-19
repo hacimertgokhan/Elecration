@@ -1,0 +1,313 @@
+Index: Elecration-Website/assets/css/index.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Website/assets/css/index.css b/Elecration-Website/assets/css/index.css
+--- a/Elecration-Website/assets/css/index.css	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Website/assets/css/index.css	(date 1660911760062)
+@@ -6,4 +6,5 @@
+ 
+ html {
+     background-color: black;
++    color: white;
+ }
+\ No newline at end of file
+Index: Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+--- a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/CraftServer.java	(date 1660917320803)
+@@ -90,7 +90,7 @@
+ 
+ public final class CraftServer implements Server {
+     private static final Player[] EMPTY_PLAYER_ARRAY = new Player[0];
+-    private String serverName = "NachoSpigot";
++    private String serverName = "Elecration";
+     private final String serverVersion;
+     private final String bukkitVersion = Versioning.getBukkitVersion();
+     private final Logger logger = Logger.getLogger("Minecraft");
+@@ -139,7 +139,7 @@
+     }
+ 
+     public CraftServer(MinecraftServer console, PlayerList playerList) {
+-        this.console = console;
++        CraftServer.console = console;
+         this.playerList = (DedicatedPlayerList) playerList;
+         this.playerView = Collections.unmodifiableList(Lists.transform(playerList.players, net.minecraft.server.EntityPlayer::getBukkitEntity));
+         this.serverVersion = CraftServer.class.getPackage().getImplementationVersion();
+@@ -549,15 +549,15 @@
+ 
+     // NOTE: Temporary calls through to server.properies until its replaced
+     private String getConfigString(String variable, String defaultValue) {
+-        return this.console.getPropertyManager().getString(variable, defaultValue);
++        return console.getPropertyManager().getString(variable, defaultValue);
+     }
+ 
+     private int getConfigInt(String variable, int defaultValue) {
+-        return this.console.getPropertyManager().getInt(variable, defaultValue);
++        return console.getPropertyManager().getInt(variable, defaultValue);
+     }
+ 
+     private boolean getConfigBoolean(String variable, boolean defaultValue) {
+-        return this.console.getPropertyManager().getBoolean(variable, defaultValue);
++        return console.getPropertyManager().getBoolean(variable, defaultValue);
+     }
+ 
+     // End Temporary calls
+@@ -1770,7 +1770,7 @@
+     }
+ 
+     public void checkSaveState() {
+-        if (this.playerCommandState || this.printSaveWarning || this.console.autosavePeriod <= 0) {
++        if (this.playerCommandState || this.printSaveWarning || console.autosavePeriod <= 0) {
+             return;
+         }
+         this.printSaveWarning = true;
+Index: Elecration-Website/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Website/index.html b/Elecration-Website/index.html
+--- a/Elecration-Website/index.html	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Website/index.html	(date 1660911740725)
+@@ -14,6 +14,7 @@
+ <!-- Header |CREATED| : WHO > Mixeration   -->
+ <header>
+ 
++    <h1>ge</h1>
+ 
+ </header>
+ <!-- Header |CREATED| : WHO > Mixeration   -->
+Index: Elecration-Server/src/main/java/dev/cobblesword/nachospigot/OldNachoConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/dev/cobblesword/nachospigot/OldNachoConfig.java b/Elecration-Server/src/main/java/dev/cobblesword/nachospigot/OldNachoConfig.java
+--- a/Elecration-Server/src/main/java/dev/cobblesword/nachospigot/OldNachoConfig.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/dev/cobblesword/nachospigot/OldNachoConfig.java	(date 1660915448999)
+@@ -17,7 +17,7 @@
+     public boolean fireEntityExplodeEvent = true;
+     public boolean reducedDensityRays = true;
+     public int playerTimeStatisticsInterval = 20;
+-    public String serverBrandName = "NachoSpigot";
++    public String serverBrandName = "Elecration";
+     public boolean stopDecodingItemStackOnPlace = true;
+     public boolean enableAntiCrash = true;
+     public boolean infiniteWaterSources = true;
+@@ -26,7 +26,7 @@
+     public boolean enableMobSound = true;
+     public boolean enableEntityActivation = true;
+     public boolean enableLavaToCobblestone = true;
+-    public boolean firePlayerMoveEvent = true; // Highly recommend disable this for lobby/limbo/minigames servers.
++    public boolean firePlayerMoveEvent = false; // Highly recommend disable this for lobby/limbo/minigames servers.
+     public boolean endermiteSpawning = true;
+     public boolean disablePhysicsPlace = false;
+     public boolean disablePhysicsUpdate = false;
+Index: patches/0_0_3_$_Fixed_OPC_System_Bug_&_Added_SVC_&_Discord_Webhook_System.patch
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/patches/0_0_3_$_Fixed_OPC_System_Bug_&_Added_SVC_&_Discord_Webhook_System.patch b/patches/0_0_3_$_Fixed_OPC_System_Bug_&_Added_SVC_&_Discord_Webhook_System.patch
+new file mode 100644
+--- /dev/null	(date 1660911713716)
++++ b/patches/0_0_3_$_Fixed_OPC_System_Bug_&_Added_SVC_&_Discord_Webhook_System.patch	(date 1660911713716)
+@@ -0,0 +1,13 @@
++Index: .gitignore
++IDEA additional info:
++Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
++<+>UTF-8
++===================================================================
++diff --git a/.gitignore b/.gitignore
++--- a/.gitignore	(revision df05313099bd835399327952287538079bc2333e)
+++++ b/.gitignore	(date 1660911613470)
++@@ -40,3 +40,4 @@
++ Paperclip
++ work
++ build
+++!/Elecration-Server/
+Index: Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java
+--- a/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/org/bukkit/craftbukkit/Main.java	(date 1660917322032)
+@@ -1,15 +1,11 @@
+ package org.bukkit.craftbukkit;
+ 
+ import dev.cobblesword.nachospigot.Nacho;
+-import eu.mixeration.Elecration.Elecration;
+-import eu.mixeration.Elecration.ElecrationConfig;
+-import eu.mixeration.Elecration.utils.WebhookUtils;
+ import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+ import net.minecraft.server.MinecraftServer;
+ import org.apache.commons.lang3.JavaVersion;
+ import org.apache.commons.lang3.SystemUtils;
+-import org.bukkit.Bukkit;
+ import org.fusesource.jansi.AnsiConsole;
+ 
+ import java.io.File;
+@@ -206,7 +202,7 @@
+                 }
+ 
+                 if (useJline) {
+-                    System.setProperty( "library.jansi.version", "NachoSpigot" );
++                    System.setProperty("library.jansi.version", "Elecration");
+                     AnsiConsole.systemInstall();
+                 } else {
+                     // This ensures the terminal literal will always match the jline implementation
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision df05313099bd835399327952287538079bc2333e)
++++ b/.gitignore	(date 1660911613470)
+@@ -40,3 +40,4 @@
+ Paperclip
+ work
+ build
++!/Elecration-Server/
+Index: Elecration-Server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/Elecration-Server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+--- a/Elecration-Server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java	(date 1660915310421)
+@@ -30,8 +30,8 @@
+     @Nonnull
+     @Override
+     public String getVersionMessage(@Nonnull String serverVersion) {
+-        String[] parts = serverVersion.substring("git-NachoSpigot-".length()).split("[-\\s]"); // Nacho
+-        return getUpdateStatusMessage("CobbleSword/NachoSpigot", GITHUB_BRANCH_NAME, parts[0]); // Nacho
++        String[] parts = serverVersion.substring("git-Elecration-".length()).split("[-\\s]"); // Nacho
++        return getUpdateStatusMessage("Mixeration/Elecration", GITHUB_BRANCH_NAME, parts[0]); // Nacho
+     }
+ 
+     private static @Nullable
+Index: Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java
+--- a/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/eu/mixeration/Elecration/ElecrationConfig.java	(date 1660914290741)
+@@ -95,7 +95,6 @@
+         return config.getDouble(path, config.getDouble(path));
+     }
+ 
+-    public static String wrong_password = StringUtils.doColor("&cWrong password...");
+ 
+     private static void saveElecration() {
+         try {
+@@ -112,6 +111,7 @@
+      */
+     public static String usage = StringUtils.doColor("&cUsage: &7/Op give|take <player>");
+     public static String title = StringUtils.doColor("&a&lOperators:");
++    public static String wrong_password = StringUtils.doColor("&cWrong password...");
+     public static String operator_gived = StringUtils.doColor("&cWarning: &7Player %s is operator...");
+     public static String operator_tooked = StringUtils.doColor("&cWarning: &7Player %s is not operator...");
+     public static String unknow_or_null = StringUtils.doColor("&7Player %s has not played before or player name is null.");
+@@ -246,7 +246,7 @@
+ 
+             /* MOTD |  */
+             List<String> motd_texts = new ArrayList<>();
+-            motd_texts.add("§9§lELECRATION §8- §7Like electron §8- §fMixeration<line>§fElecration Spigot 1.8.8 Modernized Fork");
++            motd_texts.add("§b§lElecration §8- §fLike electron §8- §bOnline: &9<online><line>       §fElecration Spigot 1.8.8 Modernized Fork");
+             /* MOTD |  */
+ 
+             config.set("elecration.settings.motd", motd_texts);
+Index: Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java b/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java
+--- a/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/net/minecraft/server/DedicatedServer.java	(date 1660917322040)
+@@ -5,6 +5,7 @@
+ import dev.cobblesword.nachospigot.Nacho;
+ import dev.cobblesword.nachospigot.commons.IPUtils;
+ import dev.cobblesword.nachospigot.knockback.KnockbackConfig;
++import eu.mixeration.Elecration.ElecrationConfig;
+ import me.elier.nachospigot.config.NachoConfig;
+ import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.LogManager;
+@@ -22,6 +23,8 @@
+ import java.util.Random;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.TimeUnit;
++
++import static eu.mixeration.Elecration.utils.StringUtils.doColor;
+ // CraftBukkit end
+ 
+ public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
+@@ -148,7 +151,6 @@
+             this.setPVP(this.propertyManager.getBoolean("pvp", true));
+             this.setAllowFlight(this.propertyManager.getBoolean("allow-flight", false));
+             this.setResourcePack(this.propertyManager.getString("resource-pack", ""), this.propertyManager.getString("resource-pack-hash", ""));
+-            this.setMotd(this.propertyManager.getString("motd", "A Minecraft Server"));
+             this.setForceGamemode(this.propertyManager.getBoolean("force-gamemode", false));
+             this.setIdleTimeout(this.propertyManager.getInt("player-idle-timeout", 0));
+             if (this.propertyManager.getInt("difficulty", 1) < 0) {
+@@ -195,17 +197,19 @@
+             DedicatedServer.LOGGER.info("Generating keypair");
+             this.a(MinecraftEncryption.b());
+             DedicatedServer.LOGGER.info("Starting Minecraft server on " + (this.getServerIp().length() == 0 ? "*" : this.getServerIp()) + ":" + this.getPort()); // Nacho - deobfuscate getPort
+-
+-        if (!org.spigotmc.SpigotConfig.lateBind) {
+-            try {
+-                this.aq().a(inetaddress, this.getPort()); // Nacho - deobfuscate getPort
+-            } catch (IOException ioexception) {
+-                DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+-                DedicatedServer.LOGGER.warn("The exception was: {}", ioexception.toString());
+-                DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
+-                return false;
+-            }
+-        }
++            for (String motd : ElecrationConfig.config.getStringList("elecration.settings.motd")) {
++                this.setMotd(doColor(motd.replace("<line>", "\n").replace("<online>", String.valueOf(getServer().getPlayers().length))));
++            }
++            if (!org.spigotmc.SpigotConfig.lateBind) {
++                try {
++                    this.aq().a(inetaddress, this.getPort()); // Nacho - deobfuscate getPort
++                } catch (IOException ioexception) {
++                    DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
++                    DedicatedServer.LOGGER.warn("The exception was: {}", ioexception.toString());
++                    DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
++                    return false;
++                }
++            }
+ 
+             // Spigot Start - Move DedicatedPlayerList up and bring plugin loading from CraftServer to here
+             // this.a((PlayerList) (new DedicatedPlayerList(this))); // CraftBukkit
+Index: Elecration-Server/src/main/java/me/elier/nachospigot/config/NachoConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Elecration-Server/src/main/java/me/elier/nachospigot/config/NachoConfig.java b/Elecration-Server/src/main/java/me/elier/nachospigot/config/NachoConfig.java
+--- a/Elecration-Server/src/main/java/me/elier/nachospigot/config/NachoConfig.java	(revision df05313099bd835399327952287538079bc2333e)
++++ b/Elecration-Server/src/main/java/me/elier/nachospigot/config/NachoConfig.java	(date 1660916252406)
+@@ -266,7 +266,7 @@
+     public static String serverBrandName;
+ 
+     private static void serverBrandName() {
+-        serverBrandName = getString("settings.brand-name", "NachoSpigot");
++        serverBrandName = getString("settings.brand-name", "Elecration");
+     }
+ 
+     public static boolean stopDecodingItemStackOnPlace;

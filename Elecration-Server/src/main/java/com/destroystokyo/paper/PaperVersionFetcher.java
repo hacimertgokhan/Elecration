@@ -30,8 +30,8 @@ public class PaperVersionFetcher implements VersionFetcher {
     @Nonnull
     @Override
     public String getVersionMessage(@Nonnull String serverVersion) {
-        String[] parts = serverVersion.substring("git-NachoSpigot-".length()).split("[-\\s]"); // Nacho
-        return getUpdateStatusMessage("CobbleSword/NachoSpigot", GITHUB_BRANCH_NAME, parts[0]); // Nacho
+        String[] parts = serverVersion.substring("git-Elecration-".length()).split("[-\\s]"); // Nacho
+        return getUpdateStatusMessage("Mixeration/Elecration", GITHUB_BRANCH_NAME, parts[0]); // Nacho
     }
 
     private static @Nullable

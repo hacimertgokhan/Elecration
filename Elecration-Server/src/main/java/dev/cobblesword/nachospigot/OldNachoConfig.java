@@ -17,7 +17,7 @@ public class OldNachoConfig {
     public boolean fireEntityExplodeEvent = true;
     public boolean reducedDensityRays = true;
     public int playerTimeStatisticsInterval = 20;
-    public String serverBrandName = "NachoSpigot";
+    public String serverBrandName = "Elecration";
     public boolean stopDecodingItemStackOnPlace = true;
     public boolean enableAntiCrash = true;
     public boolean infiniteWaterSources = true;
@@ -26,7 +26,7 @@ public class OldNachoConfig {
     public boolean enableMobSound = true;
     public boolean enableEntityActivation = true;
     public boolean enableLavaToCobblestone = true;
-    public boolean firePlayerMoveEvent = true; // Highly recommend disable this for lobby/limbo/minigames servers.
+    public boolean firePlayerMoveEvent = false; // Highly recommend disable this for lobby/limbo/minigames servers.
     public boolean endermiteSpawning = true;
     public boolean disablePhysicsPlace = false;
     public boolean disablePhysicsUpdate = false;

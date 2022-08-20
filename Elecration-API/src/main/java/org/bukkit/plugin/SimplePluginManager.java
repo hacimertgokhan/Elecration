@@ -13,11 +13,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.util.FileUtil;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -83,6 +85,17 @@ public final class SimplePluginManager implements PluginManager {
         }
     }
 
+    public static String random(int len) {
+        final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < len; i++) {
+            int randomIndex = random.nextInt(chars.length());
+            sb.append(chars.charAt(randomIndex));
+        }
+        return sb.toString();
+    }
+
     /**
      * Loads the plugins contained within the specified directory
      *
@@ -117,19 +130,24 @@ public final class SimplePluginManager implements PluginManager {
 
             if (loader == null) continue;
 
-            PluginDescriptionFile description = null;
+            PluginDescriptionFile description;
             try {
-                description = PluginLoader.getPluginDescription(file);
-                String name = description.getName();
+                description = JavaPluginLoader.getPluginDescription(file);
+                String name;
+                if (description == null) {
+                    name = String.valueOf(random(7));
+                } else {
+                    name = description.getFullName();
+                }
                 if (name.equalsIgnoreCase("bukkit") || name.equalsIgnoreCase("minecraft") || name.equalsIgnoreCase("mojang")) {
                     server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "': Restricted Name");
                     continue;
                 } else if (description.rawName.indexOf(' ') != -1) {
                     server.getLogger().warning(String.format(
-                        "Plugin `%s' uses the space-character (0x20) in its name `%s' - this is discouraged",
-                        description.getFullName(),
-                        description.rawName
-                        ));
+                            "Plugin `%s' uses the space-character (0x20) in its name `%s' - this is discouraged",
+                            description.getFullName(),
+                            description.rawName
+                    ));
                 }
             } catch (InvalidDescriptionException ex) {
                 server.getLogger().log(Level.SEVERE, "Could not load '" + file.getPath() + "' in folder '" + directory.getPath() + "'", ex);

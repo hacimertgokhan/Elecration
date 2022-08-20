@@ -1,29 +1,24 @@
 package org.bukkit.plugin;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.AbstractConstruct;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.Tag;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.*;
 
 /**
  * This type is the runtime-container for the information in the plugin.yml.
@@ -553,6 +548,25 @@ public final class PluginDescriptionFile {
         return prefix;
     }
 
+    private static List<String> makePluginNameList(final Map<?, ?> map, final String key) throws InvalidDescriptionException {
+        final Object value = map.get(key);
+        if (value == null) {
+            return ImmutableList.of();
+        }
+
+        final ImmutableList.Builder<String> builder = ImmutableList.builder();
+        try {
+            for (final Object entry : (Iterable<?>) value) {
+                builder.add(entry.toString().replace(' ', '_'));
+            }
+        } catch (ClassCastException ex) {
+            throw new InvalidDescriptionException(ex, key + " is of wrong type");
+        } catch (NullPointerException ex) {
+            throw new InvalidDescriptionException(ex, "invalid " + key + " format");
+        }
+        return builder.build();
+    }
+
     /**
      * Gives the map of command-name to command-properties. Each entry in this
      * map corresponds to a single command and the respective values are the
@@ -601,8 +615,7 @@ public final class PluginDescriptionFile {
      *         standard one if no specific message is defined. Without the
      *         permission node, no {@link
      *         PluginCommand#setExecutor(CommandExecutor) CommandExecutor} or
-     *         {@link PluginCommand#setTabCompleter(TabCompleter)
-     *         TabCompleter} will be called.</td>
+     *          will be called.</td>
      *     <td><blockquote><pre>permission: inferno.flagrate</pre></blockquote></td>
      * </tr><tr>
      *     <td><code>permission-message</code></td>
@@ -623,9 +636,7 @@ public final class PluginDescriptionFile {
      *     <td>{@link PluginCommand#setUsage(String)}</td>
      *     <td>String</td>
      *     <td>This message is displayed to a player when the {@link
-     *         PluginCommand#setExecutor(CommandExecutor)} {@linkplain
-     *         CommandExecutor#onCommand(CommandSender,Command,String,String[])
-     *         returns false}. &lt;command&gt; is a macro that is replaced
+     *         PluginCommand#setExecutor(CommandExecutor)} . &lt;command&gt; is a macro that is replaced
      *         the command issued.</td>
      *     <td><blockquote><pre>usage: Syntax error! Perhaps you meant /&lt;command&gt; PlayerName?</pre></blockquote>
      *         It is worth noting that to use a colon in a yaml, like
@@ -671,6 +682,99 @@ public final class PluginDescriptionFile {
      */
     public Map<String, Map<String, Object>> getCommands() {
         return commands;
+    }
+
+    /**
+     * Gives the default {@link Permission#getDefault() default} state of
+     * {@link #getPermissions() permissions} registered for the plugin.
+     * <ul>
+     * <li>If not specified, it will be {@link PermissionDefault#OP}.
+     * <li>It is matched using {@link PermissionDefault#getByName(String)}
+     * <li>It only affects permissions that do not define the
+     *     <code>default</code> node.
+     * <li>It may be any value in {@link PermissionDefault}.
+     * </ul>
+     * <p>
+     * In the plugin.yml, this entry is named <code>default-permission</code>.
+     * <p>
+     * Example:<blockquote><pre>default-permission: NOT_OP</pre></blockquote>
+     *
+     * @return the default value for the plugin's permissions
+     */
+    public PermissionDefault getPermissionDefault() {
+        return defaultPerm;
+    }
+
+    /**
+     * Gives a set of every {@link PluginAwareness} for a plugin. An awareness
+     * dictates something that a plugin developer acknowledges when the plugin
+     * is compiled. Some implementions may define extra awarenesses that are
+     * not included in the API. Any unrecognized
+     * awareness (one unsupported or in a future version) will cause a dummy
+     * object to be created instead of failing.
+     *
+     * <ul>
+     * <li>Currently only supports the enumerated values in {@link
+     *     PluginAwareness.Flags}.
+     * <li>Each awareness starts the identifier with bang-at
+     *     (<code>!@</code>).
+     * <li>Unrecognized (future / unimplemented) entries are quietly replaced
+     *     by a generic object that implements PluginAwareness.
+     * <li>A type of awareness must be defined by the runtime and acknowledged
+     *     by the API, effectively discluding any derived type from any
+     *     plugin's classpath.
+     * <li><code>awareness</code> must be in <a
+     *     href="http://en.wikipedia.org/wiki/YAML#Lists">YAML list
+     *     format</a>.
+     * </ul>
+     * <p>
+     * In the plugin.yml, this entry is named <code>awareness</code>.
+     * <p>
+     * Example:<blockquote><pre>awareness:
+     * - !@UTF8</pre></blockquote>
+     * <p>
+     * <b>Note:</b> Although unknown versions of some future awareness are
+     * gracefully substituted, previous versions of Bukkit (ones prior to the
+     * first implementation of awareness) will fail to load a plugin that
+     * defines any awareness.
+     *
+     * @return a set containing every awareness for the plugin
+     */
+    public Set<PluginAwareness> getAwareness() {
+        return awareness;
+    }
+
+    /**
+     * Returns the name of a plugin, including the version. This method is
+     * provided for convenience; it uses the {@link #getName()} and {@link
+     * #getVersion()} entries.
+     *
+     * @return a descriptive name of the plugin and respective version
+     */
+    public String getFullName() {
+        return name + " v" + version;
+    }
+
+    /**
+     * @return unused
+     * @deprecated unused
+     */
+    @Deprecated
+    public String getClassLoaderOf() {
+        return classLoaderOf;
+    }
+
+    public void setDatabaseEnabled(boolean database) {
+        this.database = database;
+    }
+
+    /**
+     * Saves this PluginDescriptionFile to the given writer
+     *
+     * @param writer Writer to output this file to
+     */
+    public void save(Writer writer) {
+        YAML.get().dump(saveMap(), writer);
     }
 
     /**
@@ -778,112 +882,19 @@ public final class PluginDescriptionFile {
      *</pre></blockquote>
      * Another example, with nested definitions, can be found <a
      * href="doc-files/permissions-example_plugin.yml">here</a>.
-     * 
+     *
      * @return the permissions this plugin will register
      */
     public List<Permission> getPermissions() {
         if (permissions == null) {
             if (lazyPermissions == null) {
-                permissions = ImmutableList.<Permission>of();
+                permissions = ImmutableList.of();
             } else {
                 permissions = ImmutableList.copyOf(Permission.loadPermissions(lazyPermissions, "Permission node '%s' in plugin description file for " + getFullName() + " is invalid", defaultPerm));
                 lazyPermissions = null;
             }
         }
         return permissions;
-    }
-
-    /**
-     * Gives the default {@link Permission#getDefault() default} state of
-     * {@link #getPermissions() permissions} registered for the plugin.
-     * <ul>
-     * <li>If not specified, it will be {@link PermissionDefault#OP}.
-     * <li>It is matched using {@link PermissionDefault#getByName(String)}
-     * <li>It only affects permissions that do not define the
-     *     <code>default</code> node.
-     * <li>It may be any value in {@link PermissionDefault}.
-     * </ul>
-     * <p>
-     * In the plugin.yml, this entry is named <code>default-permission</code>.
-     * <p>
-     * Example:<blockquote><pre>default-permission: NOT_OP</pre></blockquote>
-     *
-     * @return the default value for the plugin's permissions
-     */
-    public PermissionDefault getPermissionDefault() {
-        return defaultPerm;
-    }
-
-    /**
-     * Gives a set of every {@link PluginAwareness} for a plugin. An awareness
-     * dictates something that a plugin developer acknowledges when the plugin
-     * is compiled. Some implementions may define extra awarenesses that are
-     * not included in the API. Any unrecognized
-     * awareness (one unsupported or in a future version) will cause a dummy
-     * object to be created instead of failing.
-     * 
-     * <ul>
-     * <li>Currently only supports the enumerated values in {@link
-     *     PluginAwareness.Flags}.
-     * <li>Each awareness starts the identifier with bang-at
-     *     (<code>!@</code>).
-     * <li>Unrecognized (future / unimplemented) entries are quietly replaced
-     *     by a generic object that implements PluginAwareness.
-     * <li>A type of awareness must be defined by the runtime and acknowledged
-     *     by the API, effectively discluding any derived type from any
-     *     plugin's classpath.
-     * <li><code>awareness</code> must be in <a
-     *     href="http://en.wikipedia.org/wiki/YAML#Lists">YAML list
-     *     format</a>.
-     * </ul>
-     * <p>
-     * In the plugin.yml, this entry is named <code>awareness</code>.
-     * <p>
-     * Example:<blockquote><pre>awareness:
-     *- !@UTF8</pre></blockquote>
-     * <p>
-     * <b>Note:</b> Although unknown versions of some future awareness are
-     * gracefully substituted, previous versions of Bukkit (ones prior to the
-     * first implementation of awareness) will fail to load a plugin that
-     * defines any awareness.
-     *
-     * @return a set containing every awareness for the plugin
-     */
-    public Set<PluginAwareness> getAwareness() {
-        return awareness;
-    }
-
-    /**
-     * Returns the name of a plugin, including the version. This method is
-     * provided for convenience; it uses the {@link #getName()} and {@link
-     * #getVersion()} entries.
-     *
-     * @return a descriptive name of the plugin and respective version
-     */
-    public String getFullName() {
-        return name + " v" + version;
-    }
-
-    /**
-     * @return unused
-     * @deprecated unused
-     */
-    @Deprecated
-    public String getClassLoaderOf() {
-        return classLoaderOf;
-    }
-
-    public void setDatabaseEnabled(boolean database) {
-        this.database = database;
-    }
-
-    /**
-     * Saves this PluginDescriptionFile to the given writer
-     *
-     * @param writer Writer to output this file to
-     */
-    public void save(Writer writer) {
-        YAML.get().dump(saveMap(), writer);
     }
 
     private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
@@ -920,15 +931,15 @@ public final class PluginDescriptionFile {
         }
 
         if (map.get("commands") != null) {
-            ImmutableMap.Builder<String, Map<String, Object>> commandsBuilder = ImmutableMap.<String, Map<String, Object>>builder();
+            ImmutableMap.Builder<String, Map<String, Object>> commandsBuilder = ImmutableMap.builder();
             try {
                 for (Map.Entry<?, ?> command : ((Map<?, ?>) map.get("commands")).entrySet()) {
-                    ImmutableMap.Builder<String, Object> commandBuilder = ImmutableMap.<String, Object>builder();
+                    ImmutableMap.Builder<String, Object> commandBuilder = ImmutableMap.builder();
                     if (command.getValue() != null) {
                         for (Map.Entry<?, ?> commandEntry : ((Map<?, ?>) command.getValue()).entrySet()) {
                             if (commandEntry.getValue() instanceof Iterable) {
                                 // This prevents internal alias list changes
-                                ImmutableList.Builder<Object> commandSubList = ImmutableList.<Object>builder();
+                                ImmutableList.Builder<Object> commandSubList = ImmutableList.builder();
                                 for (Object commandSubListItem : (Iterable<?>) commandEntry.getValue()) {
                                     if (commandSubListItem != null) {
                                         commandSubList.add(commandSubListItem);
@@ -983,7 +994,7 @@ public final class PluginDescriptionFile {
         }
 
         if (map.get("authors") != null) {
-            ImmutableList.Builder<String> authorsBuilder = ImmutableList.<String>builder();
+            ImmutableList.Builder<String> authorsBuilder = ImmutableList.builder();
             if (map.get("author") != null) {
                 authorsBuilder.add(map.get("author").toString());
             }
@@ -1000,7 +1011,7 @@ public final class PluginDescriptionFile {
         } else if (map.get("author") != null) {
             authors = ImmutableList.of(map.get("author").toString());
         } else {
-            authors = ImmutableList.<String>of();
+            authors = ImmutableList.of();
         }
 
         if (map.get("default-permission") != null) {
@@ -1034,25 +1045,6 @@ public final class PluginDescriptionFile {
         if (map.get("prefix") != null) {
             prefix = map.get("prefix").toString();
         }
-    }
-
-    private static List<String> makePluginNameList(final Map<?, ?> map, final String key) throws InvalidDescriptionException {
-        final Object value = map.get(key);
-        if (value == null) {
-            return ImmutableList.of();
-        }
-
-        final ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-        try {
-            for (final Object entry : (Iterable<?>) value) {
-                builder.add(entry.toString().replace(' ', '_'));
-            }
-        } catch (ClassCastException ex) {
-            throw new InvalidDescriptionException(ex, key + " is of wrong type");
-        } catch (NullPointerException ex) {
-            throw new InvalidDescriptionException(ex, "invalid " + key + " format");
-        }
-        return builder.build();
     }
 
     private Map<String, Object> saveMap() {

@@ -4,6 +4,7 @@ import com.google.common.base.Throwables;
 import eu.mixeration.Elecration.commands.Management_OP;
 import eu.mixeration.Elecration.commands.Management_PCC;
 import eu.mixeration.Elecration.commands.Management_SVC;
+import eu.mixeration.Elecration.commands.shorts.PluginList;
 import eu.mixeration.Elecration.utils.StringUtils;
 import eu.mixeration.Elecration.utils.WebhookUtils;
 import org.bukkit.Bukkit;
@@ -137,7 +138,7 @@ public class ElecrationConfig {
         version = getInt("config-version", 0);
         set("mxr$elecration", false);
         set("config-version", 0);
-        if(config.getBoolean("mxr$elecration")) {
+        if (config.getBoolean("mxr$elecration")) {
             Elecration.LOGGER.info("elecration.yml loaded...");
         } else {
             elecrationValues();
@@ -146,14 +147,17 @@ public class ElecrationConfig {
             commands.put("Op", new Management_OP("Op"));
             commands.put("DeOp", new Management_OP("DeOp"));
         }
+        commands.put("Plugins", new PluginList("Plugins"));
+        commands.put("Plugin", new PluginList("Plugin"));
+        commands.put("Pl", new PluginList("Pl"));
         commands.put("Pcc", new Management_PCC("Pcc"));
         commands.put("Svc", new Management_SVC("Svc"));
         readConfig(ElecrationConfig.class, null);
-        if(ElecrationConfig.config.getBoolean("elecration.settings.use-discord")) {
-            Elecration.LOGGER.info( "Sending test message for discord..." );
+        if (ElecrationConfig.config.getBoolean("elecration.settings.use-discord")) {
+            Elecration.LOGGER.info("Sending test message for discord...");
             WebhookUtils.sendMessageToDiscord(ElecrationConfig.config.getString("elecration.settings.discord.token"), "Elecration", "Your server has just started...");
         } else {
-            Elecration.LOGGER.info( "Elecration Discord Module is not enable, Skipping..." );
+            Elecration.LOGGER.info("Elecration Discord Module is not enable, Skipping...");
         }
     }
 

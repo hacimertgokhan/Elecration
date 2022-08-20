@@ -5,6 +5,7 @@
 
 <--> by Mixeration
 [Elecration-0005] Changed PluginList Type  
+[Elecration-0005] First website template
 [Elecration-0005] Fixed PluginLoader Crash 
 [Elecration-0004] Fixed unloaded motd 
 [Elecration-0004] Changed brand channel name and version string name

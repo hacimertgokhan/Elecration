@@ -1,6 +1,7 @@
 package eu.mixeration.Elecration;
 
 import com.google.common.base.Throwables;
+import eu.mixeration.Elecration.commands.Management_DC;
 import eu.mixeration.Elecration.commands.Management_OP;
 import eu.mixeration.Elecration.commands.Management_PCC;
 import eu.mixeration.Elecration.commands.Management_SVC;
@@ -105,6 +106,7 @@ public class ElecrationConfig {
         }
     }
 
+
     /*
 
         Locale and Messages
@@ -151,11 +153,12 @@ public class ElecrationConfig {
         commands.put("Plugin", new PluginList("Plugin"));
         commands.put("Pl", new PluginList("Pl"));
         commands.put("Pcc", new Management_PCC("Pcc"));
+        commands.put("Discord", new Management_DC("Discord"));
         commands.put("Svc", new Management_SVC("Svc"));
         readConfig(ElecrationConfig.class, null);
         if (ElecrationConfig.config.getBoolean("elecration.settings.use-discord")) {
             Elecration.LOGGER.info("Sending test message for discord...");
-            WebhookUtils.sendMessageToDiscord(ElecrationConfig.config.getString("elecration.settings.discord.token"), "Elecration", "Your server has just started...");
+            WebhookUtils.sendMessageToDiscord(ElecrationConfig.config.getString("elecration.discord.output-channel"), "Elecration", "Your server has just started...");
         } else {
             Elecration.LOGGER.info("Elecration Discord Module is not enable, Skipping...");
         }
@@ -210,17 +213,34 @@ public class ElecrationConfig {
         server_message.add("");
         /* PCC | Plugin Control Command |  */
 
+        /* DC | Discord Control Command |  */
+        List<String> discord_message = new ArrayList<>();
+        discord_message.add("");
+        discord_message.add("§8- §a/Discord message <your-message> §7: Send message to discord.");
+        discord_message.add("");
+        /* DC | Discord Control Command |  */
+
+        /* DCI | Discord Invite Command |  */
+        List<String> discord_invite_message = new ArrayList<>();
+        discord_invite_message.add("");
+        discord_invite_message.add("§8- §9Discord: www.discord.com");
+        discord_invite_message.add("");
+        /* DCI | Discord Invite Command |  */
+
         if (!config.getBoolean("mxr$elecration")) {
             config.set("elecration.messages.help.pcc", help_message);
             config.set("elecration.messages.help.operator", operator_message);
             config.set("elecration.messages.help.server", server_message);
+            config.set("elecration.messages.help.discord", discord_message);
+            config.set("elecration.messages.discord.invite", discord_invite_message);
             config.set("elecration.messages.no-permission", no_permission);
             config.set("elecration.messages.operator.wrong-password", wrong_password);
             config.set("elecration.messages.operator.unknow", unknow_or_null);
             config.set("elecration.messages.operator.gived", operator_gived);
             config.set("elecration.messages.operator.tooked", operator_tooked);
             config.set("elecration.messages.operator.usage", usage);
-            config.set("elecration.messages.operator.title", title);
+            config.set("elecration.messages.discord.user-join", "<user> join the server");
+            config.set("elecration.messages.discord.user-quit", "<user> quit the server");
             config.set("elecration.messages.server.must-be-int", "§7Cant understand, must be §c(0-9/INTEGER)");
             config.set("elecration.messages.server.unknow-value", "§7Cant understand, must be §c(%s)");
             config.set("elecration.messages.server.motd-changed", "§7Server motd just changed");
@@ -235,7 +255,13 @@ public class ElecrationConfig {
             config.set("elecration.settings.use-operator-password-security", true);
             config.set("elecration.settings.use-motd", true);
             config.set("elecration.settings.use-discord", true);
-            config.set("elecration.settings.discord.token", "https://discord.com/api/webhooks/1010134066357600316/Tsn48ucRV46FPzjA4TKVzLy3LkbI-Oo4him2sCoZlS5lADUkwwjJ54ubC1qk7vva5w_4");
+            config.set("elecration.discord.guild-id", "977491416366338081");
+            config.set("elecration.discord.modules.user-quit", "true");
+            config.set("elecration.discord.modules.user-join", "true");
+            config.set("elecration.discord.output-channel", "https://discord.com/api/webhooks/1010134066357600316/Tsn48ucRV46FPzjA4TKVzLy3LkbI-Oo4him2sCoZlS5lADUkwwjJ54ubC1qk7vva5w_4");
+            config.set("elecration.discord.message-channel-webhook", "https://discord.com/api/webhooks/1010134066357600316/Tsn48ucRV46FPzjA4TKVzLy3LkbI-Oo4him2sCoZlS5lADUkwwjJ54ubC1qk7vva5w_4");
+            config.set("elecration.settings.discord.token", "MTAxMDI4MzIxMTc0MzU1OTc4MA.GzV8vy.miOpMxlCQDhscBwnc5VSQagb-a1AXUDj9nBv0o");
+            config.set("elecration.settings.discord.status", "Elecration");
             config.set("elecration.settings.operator.password", generateRandomPassword(7));
             set("mxr$elecration", true);
             changeMotd();
@@ -250,7 +276,7 @@ public class ElecrationConfig {
 
             /* MOTD |  */
             List<String> motd_texts = new ArrayList<>();
-            motd_texts.add("§b§lElecration §8- §fLike electron §8- §bOnline: &9<online><line>       §fElecration Spigot 1.8.8 Modernized Fork");
+            motd_texts.add("§b§lElecration §8- §fLike electron §8- §bOnline player: &9<online><line>       §fElecration Spigot 1.8.8 Modernized Fork");
             /* MOTD |  */
 
             config.set("elecration.settings.motd", motd_texts);
@@ -261,6 +287,5 @@ public class ElecrationConfig {
     public static String getMessage(String message) {
         return StringUtils.doColor(config.getString("elecration.messages." + message));
     }
-
 
 }

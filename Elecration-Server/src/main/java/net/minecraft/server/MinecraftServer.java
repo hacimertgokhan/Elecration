@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import co.aikar.timings.SpigotTimings;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -13,40 +14,31 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.base64.Base64;
-import java.awt.GraphicsEnvironment;
+import io.netty.util.ResourceLeakDetector;
+import jline.console.ConsoleReader;
+import joptsimple.OptionSet;
+import me.elier.nachospigot.config.NachoConfig;
+import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bukkit.craftbukkit.Main;
+import xyz.sculas.nacho.async.AsyncExplosions;
+
+import javax.imageio.ImageIO;
+import javax.security.auth.login.LoginException;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.Proxy;
 import java.security.KeyPair;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Queue;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
-import javax.imageio.ImageIO;
-
-import io.netty.util.ResourceLeakDetector;
-import me.elier.nachospigot.config.NachoConfig;
-import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-// CraftBukkit start
-
-import jline.console.ConsoleReader;
-import joptsimple.OptionSet;
-
-import org.bukkit.craftbukkit.Main;
-import co.aikar.timings.SpigotTimings; // Spigot
-import xyz.sculas.nacho.async.AsyncExplosions;
 // CraftBukkit end
 
 public abstract class MinecraftServer implements Runnable, ICommandListener, IAsyncTaskHandler, IMojangStatistics {
@@ -102,7 +94,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
     private final GameProfileRepository Y;
     private final UserCache Z;
     protected final Queue<FutureTask<?>> j = new java.util.concurrent.ConcurrentLinkedQueue<FutureTask<?>>(); // Spigot, PAIL: Rename
-    private Thread serverThread;
+    private final Thread serverThread;
     private long ab = az();
 
     // CraftBukkit start
@@ -165,7 +157,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
         return new CommandDispatcher();
     }
 
-    protected abstract boolean init() throws IOException;
+    protected abstract boolean init() throws IOException, LoginException;
 
     protected void a(String s) {
         if (this.getConvertable().isConvertable(s)) {
@@ -414,11 +406,11 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
 
                 if (worldserver != null) {
                     if (!flag) {
-                        MinecraftServer.LOGGER.info("Saving chunks for level \'" + worldserver.getWorldData().getName() + "\'/" + worldserver.worldProvider.getName());
+                        MinecraftServer.LOGGER.info("Saving chunks for level '" + worldserver.getWorldData().getName() + "'/" + worldserver.worldProvider.getName());
                     }
 
                     try {
-                        worldserver.save(true, (IProgressUpdate) null);
+                        worldserver.save(true, null);
                         worldserver.saveLevel(); // CraftBukkit
                     } catch (ExceptionWorldConflict exceptionworldconflict) {
                         MinecraftServer.LOGGER.warn(exceptionworldconflict.getMessage());
@@ -680,14 +672,15 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
             try {
                 BufferedImage bufferedimage = ImageIO.read(file);
 
-                Validate.validState(bufferedimage.getWidth() == 64, "Must be 64 pixels wide", new Object[0]);
-                Validate.validState(bufferedimage.getHeight() == 64, "Must be 64 pixels high", new Object[0]);
+                Validate.validState(bufferedimage.getWidth() == 64, "Must be 64 pixels wide");
+                Validate.validState(bufferedimage.getHeight() == 64, "Must be 64 pixels high");
                 ImageIO.write(bufferedimage, "PNG", new ByteBufOutputStream(bytebuf));
-                /*ByteBuf*/ bytebuf1 = Base64.encode(bytebuf); // Paper - cleanup favicon bytebuf
+                /*ByteBuf*/
+                bytebuf1 = Base64.encode(bytebuf); // Paper - cleanup favicon bytebuf
 
                 serverping.setFavicon("data:image/png;base64," + bytebuf1.toString(Charsets.UTF_8));
             } catch (Exception exception) {
-                MinecraftServer.LOGGER.error("Couldn\'t load server icon", exception);
+                MinecraftServer.LOGGER.error("Couldn't load server icon", exception);
             } finally {
                 bytebuf.release();
                 // Paper start - cleanup favicon bytebuf
@@ -728,7 +721,7 @@ public abstract class MinecraftServer implements Runnable, ICommandListener, IAs
             int j = MathHelper.nextInt(this.s, 0, this.I() - agameprofile.length);
 
             for (int k = 0; k < agameprofile.length; ++k) {
-                agameprofile[k] = ((EntityPlayer) this.playerList.v().get(j + k)).getProfile(); // Nacho - deobfuscate playerList
+                agameprofile[k] = this.playerList.v().get(j + k).getProfile(); // Nacho - deobfuscate playerList
             }
 
             Collections.shuffle(Arrays.asList(agameprofile));

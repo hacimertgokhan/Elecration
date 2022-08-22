@@ -15,6 +15,7 @@ import org.bukkit.craftbukkit.util.Waitable;
 import org.bukkit.event.server.RemoteServerCommandEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 
+import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -62,7 +63,7 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
         }
     }
 
-    protected boolean init() throws IOException {
+    protected boolean init() throws IOException, LoginException {
         Thread thread = new Thread("Server console handler") {
             public void run() {
                 // CraftBukkit start
@@ -185,6 +186,9 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
 
             eu.mixeration.Elecration.ElecrationConfig.init(new File("elecration.yml"));
             eu.mixeration.Elecration.ElecrationConfig.registerCommands();
+            if (ElecrationConfig.config.getBoolean("elecration.settings.use-discord")) {
+                eu.mixeration.Elecration.discord.DiscordBotLoader.buildDiscordBotLoader();
+            }
 
             // Elecration Stop
 
@@ -303,7 +307,6 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
                 this.a(this.U(), this.U(), k, worldtype, s2);
                 long i1 = System.nanoTime() - j;
                 String s3 = String.format("%.3fs", (double) i1 / 1.0E9D);
-
                 DedicatedServer.LOGGER.info("Done (" + s3 + ")! For help, type \"help\" or \"?\"");
                 if (this.propertyManager.getBoolean("enable-query", false)) {
                     DedicatedServer.LOGGER.info("Starting GS4 status listener");

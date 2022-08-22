@@ -167,6 +167,19 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+
+        <!--
+
+            Discord JDA API
+
+        -->
+
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>5.0.0-alpha.18</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>

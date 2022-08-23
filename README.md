@@ -4,6 +4,10 @@
 ```
 
 <--> by Mixeration
+
+[Elecration-0006] Fixed config load error. 
+[Elecration-0006] Configurable modules 
+[Elecration-0006] Discord Bot Support
 [Elecration-0005] Changed PluginList Type  
 [Elecration-0005] First website template
 [Elecration-0005] Fixed PluginLoader Crash 

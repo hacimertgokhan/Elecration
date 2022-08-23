@@ -5,7 +5,7 @@
 
 <--> by Mixeration
 
-[Elecration-0006] Fixed unsaved config load
+[Elecration-0007] Fixed unsaved config load
 [Elecration-0006] Fixed config load error. 
 [Elecration-0006] Configurable modules 
 [Elecration-0006] Discord Bot Support

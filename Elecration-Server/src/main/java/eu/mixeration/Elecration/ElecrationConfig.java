@@ -138,10 +138,9 @@ public class ElecrationConfig {
         commands = new HashMap<>();
 
         version = getInt("config-version", 0);
-        set("mxr$elecration", false);
         set("config-version", 0);
         if (config.getBoolean("mxr$elecration")) {
-            Elecration.LOGGER.info("elecration.yml loaded...");
+            Elecration.LOGGER.info("Loading ElecrationSpigot config from elecration.yml");
         } else {
             elecrationValues();
         }
